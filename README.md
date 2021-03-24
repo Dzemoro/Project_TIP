@@ -1,1 +1,1 @@
-# Project_TIP
+# TIP - Projekt komunikatora
