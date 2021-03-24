@@ -1,0 +1,6 @@
+C:\Users\Krzysiek\source\repos\TIP_Project\ClientApp\ClientClassLib\bin\Debug\ClientClassLib.dll
+C:\Users\Krzysiek\source\repos\TIP_Project\ClientApp\ClientClassLib\bin\Debug\ClientClassLib.pdb
+C:\Users\Krzysiek\source\repos\TIP_Project\ClientApp\ClientClassLib\obj\Debug\ClientClassLib.csprojAssemblyReference.cache
+C:\Users\Krzysiek\source\repos\TIP_Project\ClientApp\ClientClassLib\obj\Debug\ClientClassLib.csproj.CoreCompileInputs.cache
+C:\Users\Krzysiek\source\repos\TIP_Project\ClientApp\ClientClassLib\obj\Debug\ClientClassLib.dll
+C:\Users\Krzysiek\source\repos\TIP_Project\ClientApp\ClientClassLib\obj\Debug\ClientClassLib.pdb
