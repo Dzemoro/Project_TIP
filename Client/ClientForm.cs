@@ -66,7 +66,7 @@ namespace ClientApp
         }
         public void StartListener()
         {
-            int listenPort = 11000;
+            int listenPort = 10000;
             UdpClient listener = new UdpClient(listenPort);
             IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
 
