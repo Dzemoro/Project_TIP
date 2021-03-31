@@ -12,20 +12,29 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Net.Sockets;
+using NAudio;
 
 namespace ClientApp
 {
     public partial class ClientForm : Form
     {
         Client client = new Client();
+       // NAudio.Wave.BufferedWaveProvider;
         public ClientForm()
         {
             InitializeComponent();
             this.client = new Client();
+
         }
         public delegate void delUpdateBox(string text);
+        public bool recording = false;
+
         ThreadStart threadStart;
         Thread receiverThread;
+
+        private NAudio.Wave.WaveIn sourceStream = null;
+        private NAudio.Wave.DirectSoundOut waveOut = null;
+
         private void button1_Click(object sender, EventArgs e)
         {
             if (addressbox.Text.Length != 0 && addressbox.Text.Length <= 15)
@@ -95,5 +104,66 @@ namespace ClientApp
             this.label3.Text = text;
         }
 
+        private void button1_Click_1(object sender, EventArgs e) //Wybór urządzenia wejściowego
+        {
+            List<NAudio.Wave.WaveInCapabilities> audioSources = new List<NAudio.Wave.WaveInCapabilities>();
+
+            for(int i=0;i< NAudio.Wave.WaveIn.DeviceCount;i++)
+            {
+                audioSources.Add(NAudio.Wave.WaveIn.GetCapabilities(i));
+            }
+            audioSList.Items.Clear();
+            foreach(var source in audioSources)
+            {
+                ListViewItem device = new ListViewItem(source.ProductName);
+                device.SubItems.Add(new ListViewItem.ListViewSubItem(device, source.Channels.ToString()));
+                audioSList.Items.Add(device);
+            }
+
+        }
+
+        private void startSButton_Click(object sender, EventArgs e) //Nagrywanie i przetywanie nagrywania
+        {
+            if(recording==false)
+            {
+                if (audioSList.SelectedItems.Count == 0) return;
+                int deviceNumber = audioSList.SelectedItems[0].Index;
+
+                sourceStream = new NAudio.Wave.WaveIn();
+                sourceStream.DeviceNumber = deviceNumber;
+                sourceStream.WaveFormat = new NAudio.Wave.WaveFormat(44100, NAudio.Wave.WaveIn.GetCapabilities(deviceNumber).Channels);
+                //
+                byte[] buffer = new byte[44100];
+                //
+                NAudio.Wave.WaveInProvider waveProv = new NAudio.Wave.WaveInProvider(sourceStream);
+                waveOut = new NAudio.Wave.DirectSoundOut();
+               
+                waveOut.Init(waveProv);
+                sourceStream.StartRecording();
+                waveProv.Read(buffer, 0, 44100);
+              
+                waveOut.Play();
+                recording = true;
+            }
+            else
+            {
+                
+                if(waveOut!=null)
+                {
+                    waveOut.Stop();
+                    waveOut.Dispose();
+                    waveOut = null;
+                }
+                if( sourceStream !=null)
+                {
+                    sourceStream.StopRecording();
+                    sourceStream.Dispose();
+                    sourceStream = null;
+
+                }
+                recording = false;
+            }
+        }
+           
     }
 }
