@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Text;
 using NAudio.Wave;
-
+using System.Security.Cryptography;
 
 namespace ClientClassLib
 {
@@ -25,11 +25,15 @@ namespace ClientClassLib
         }
         public void sendBytes(IPAddress address, byte[] bytes)
         {
+            
+            //byte[] encodedBytes= 
+                 //= bytes.Reverse().ToArray();
+
             Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            // IPAddress address = IPAddress.Parse("127.0.0.1");
+            
             IPEndPoint ep = new IPEndPoint(address, 11000);
             s.SendTo(bytes, ep);
-           // Console.WriteLine("Message sent to the address");
+           
         }
 
 

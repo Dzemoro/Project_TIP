@@ -1,20 +1,15 @@
 ﻿using ClientClassLib;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Net.Sockets;
-using System.IO;
-using NAudio;
 using NAudio.Wave;
+using System.Security.Cryptography;
 /*TODO
  * Szyfrowanie
  * NEGOCJACJA
@@ -90,7 +85,7 @@ namespace ClientApp
             receiverThread.Start();
             audioThread.Start();
         }
-        public void StartListener()
+        private void StartListener()
         {
             int listenPort = 11110;
             UdpClient listener = new UdpClient(listenPort);
@@ -114,7 +109,7 @@ namespace ClientApp
                 listener.Close();
             }
         }
-        public void UpdateBox(string text)
+        private void UpdateBox(string text)
         {
             this.label3.Text = text;
         }
@@ -168,7 +163,6 @@ namespace ClientApp
                 player.Dispose();
                 inputRec.Dispose();
                 outputWaveProvider.ClearBuffer();
-                bufferedWaveProvider.ClearBuffer();
                 recording = false;
             }
         }
@@ -179,16 +173,13 @@ namespace ClientApp
         }
         private void RecorderOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
         {
-
-           // bufferedWaveProvider.AddSamples(waveInEventArgs.Buffer, 0, waveInEventArgs.BytesRecorded);
             client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
-
         }
-        public void Connect()
+        private void Connect()
         {
 
         }
-        public void Refresh()
+        private void Refresh()
         {
             int listenPort = 11000;
             UdpClient listener = new UdpClient(listenPort);
@@ -199,11 +190,12 @@ namespace ClientApp
                 while (true)
                 {
                     byte[] bytes = listener.Receive(ref groupEP);
-                    // outputWaveProvider.ClearBuffer();
+
                     Console.WriteLine("Received Something");
+                    //byte[] decodedBytes = bytes.Reverse().ToArray();
+                    
                     outputWaveProvider.AddSamples(bytes, 0, bytes.Length);
                    
-                   // this.label3.BeginInvoke(updateBox, $" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
                 }
             }
             catch (SocketException e)
@@ -215,6 +207,17 @@ namespace ClientApp
                 listener.Close();
             }
         }
+        private byte[] Encode(byte[] bytes)
+        {
+            byte[] bt= new byte[bytes.Length];
+            return bt;
+        }
+        private byte[] Decode(byte[] bytes)
+        {
+            byte[] bt = new byte[bytes.Length];
+            return bt;
+        }
+
 
     }
 }
