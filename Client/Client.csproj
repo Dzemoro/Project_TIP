@@ -81,6 +81,12 @@
     <Compile Include="ClientForm.Designer.cs">
       <DependentUpon>ClientForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="ConnectionPanel.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ConnectionPanel.Designer.cs">
+      <DependentUpon>ConnectionPanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="GuIClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -97,6 +103,9 @@
   <ItemGroup>
     <EmbeddedResource Include="ClientForm.resx">
       <DependentUpon>ClientForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ConnectionPanel.resx">
+      <DependentUpon>ConnectionPanel.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.send = new System.Windows.Forms.Button();
+            this.send_button = new System.Windows.Forms.Button();
             this.message = new System.Windows.Forms.TextBox();
             this.addressbox = new System.Windows.Forms.TextBox();
             this.messageLbl = new System.Windows.Forms.Label();
@@ -40,19 +40,19 @@
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.refreshB = new System.Windows.Forms.Button();
-            this.startSButton = new System.Windows.Forms.Button();
+            this.startSbutton = new System.Windows.Forms.Button();
             this.audioPanel.SuspendLayout();
             this.SuspendLayout();
             // 
-            // send
+            // send_button
             // 
-            this.send.Location = new System.Drawing.Point(193, 140);
-            this.send.Name = "send";
-            this.send.Size = new System.Drawing.Size(75, 23);
-            this.send.TabIndex = 0;
-            this.send.Text = "Send";
-            this.send.UseVisualStyleBackColor = true;
-            this.send.Click += new System.EventHandler(this.button1_Click);
+            this.send_button.Location = new System.Drawing.Point(193, 140);
+            this.send_button.Name = "send_button";
+            this.send_button.Size = new System.Drawing.Size(75, 23);
+            this.send_button.TabIndex = 0;
+            this.send_button.Text = "Send";
+            this.send_button.UseVisualStyleBackColor = true;
+            this.send_button.Click += new System.EventHandler(this.SendButton_Click);
             // 
             // message
             // 
@@ -149,24 +149,24 @@
             this.refreshB.TabIndex = 7;
             this.refreshB.Text = "Refresh sources";
             this.refreshB.UseVisualStyleBackColor = true;
-            this.refreshB.Click += new System.EventHandler(this.button1_Click_1);
+            this.refreshB.Click += new System.EventHandler(this.Refresh_Click);
             // 
-            // startSButton
+            // startSbutton
             // 
-            this.startSButton.Location = new System.Drawing.Point(552, 38);
-            this.startSButton.Name = "startSButton";
-            this.startSButton.Size = new System.Drawing.Size(128, 29);
-            this.startSButton.TabIndex = 8;
-            this.startSButton.Text = "Start/Stop";
-            this.startSButton.UseVisualStyleBackColor = true;
-            this.startSButton.Click += new System.EventHandler(this.startSButton_Click);
+            this.startSbutton.Location = new System.Drawing.Point(552, 38);
+            this.startSbutton.Name = "startSbutton";
+            this.startSbutton.Size = new System.Drawing.Size(128, 29);
+            this.startSbutton.TabIndex = 8;
+            this.startSbutton.Text = "Start/Stop";
+            this.startSbutton.UseVisualStyleBackColor = true;
+            this.startSbutton.Click += new System.EventHandler(this.StartSbutton_Click);
             // 
             // ClientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(692, 337);
-            this.Controls.Add(this.startSButton);
+            this.Controls.Add(this.startSbutton);
             this.Controls.Add(this.refreshB);
             this.Controls.Add(this.audioPanel);
             this.Controls.Add(this.label3);
@@ -175,9 +175,9 @@
             this.Controls.Add(this.messageLbl);
             this.Controls.Add(this.addressbox);
             this.Controls.Add(this.message);
-            this.Controls.Add(this.send);
+            this.Controls.Add(this.send_button);
             this.Name = "ClientForm";
-            this.Text = "Form1";
+            this.Text = "Connection Maganger";
             this.Load += new System.EventHandler(this.ClientForm_Load);
             this.audioPanel.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -187,7 +187,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Button send;
+        private System.Windows.Forms.Button send_button;
         private System.Windows.Forms.TextBox message;
         private System.Windows.Forms.TextBox addressbox;
         private System.Windows.Forms.Label messageLbl;
@@ -199,7 +199,7 @@
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.Button refreshB;
-        private System.Windows.Forms.Button startSButton;
+        private System.Windows.Forms.Button startSbutton;
     }
 }
 

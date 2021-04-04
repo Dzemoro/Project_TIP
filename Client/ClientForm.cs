@@ -9,42 +9,41 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Net.Sockets;
 using NAudio.Wave;
-using System.Security.Cryptography;
-/*TODO
- * Szyfrowanie
- * NEGOCJACJA
- * PINGOWANIE
- * GUI
-*/
+using System.Media;
+
 namespace ClientApp
 {
+    
     public partial class ClientForm : Form
     {
-        Client client = new Client();
-       // NAudio.Wave.BufferedWaveProvider;
+       Client client = new Client();
         public ClientForm()
         {
             InitializeComponent();
             this.client = new Client();
-
         }
         public delegate void delUpdateBox(string text);
         public bool recording = false;
 
-        ThreadStart threadStart,audThreadStart;
-        Thread receiverThread, audioThread;
-     
+        ThreadStart threadStart,audThreadStart,sigThreadStart;
+        Thread receiverThread, audioThread, sigThread;
         WaveIn inputRec;
-        BufferedWaveProvider bufferedWaveProvider;
         BufferedWaveProvider outputWaveProvider;
-        SavingWaveProvider savingWaveProvider;
         WaveOut player = new WaveOut();
-        
-        //private NAudio.Wave.WaveIn sourceStream = null;
-        // private NAudio.Wave.DirectSoundOut waveOut = null;
 
-
-        private void button1_Click(object sender, EventArgs e)
+        private void ClientForm_Load(object sender, EventArgs e)
+        {
+            threadStart = new ThreadStart(StartListener);
+            audThreadStart = new ThreadStart(ReceiveTransmition);
+            receiverThread = new Thread(threadStart);
+            audioThread = new Thread(audThreadStart);
+          
+            receiverThread.Name = "Receiver Thread";
+            receiverThread.Start();
+            audioThread.Start();
+        }
+        #region Interface_Handling     
+        private void SendButton_Click(object sender, EventArgs e)
         {
             if (addressbox.Text.Length != 0 && addressbox.Text.Length <= 15)
             {
@@ -60,37 +59,112 @@ namespace ClientApp
                     };
                     temp = message.Text;
                     client.sendMessage(ipaddress, temp);
+                    sigThreadStart= new ThreadStart(PlayCall);
+                    sigThread = new Thread(sigThreadStart);
+                    sigThread.Start();
+
                 }
                 else
                 {
                     addressbox.ForeColor = Color.Red;
                     MessageBox.Show("Invalid address");
                 }
-
-
             }
             else
             {
                 MessageBox.Show("Invalid address");
             }
         }
-
-        private void ClientForm_Load(object sender, EventArgs e)
+        private void UpdateBox(string text)
         {
-            threadStart = new ThreadStart(StartListener);
-            audThreadStart = new ThreadStart(Refresh);
-            receiverThread = new Thread(threadStart);
-            audioThread = new Thread(audThreadStart);
-            receiverThread.Name = "Receiver Thread";
-            receiverThread.Start();
-            audioThread.Start();
+            this.label3.Text = text;
         }
+        private void Refresh_Click(object sender, EventArgs e) 
+        {
+            List<WaveInCapabilities> audioSources = new List<WaveInCapabilities>();
+            for(int i=0;i< WaveIn.DeviceCount;i++)
+            {
+                audioSources.Add(WaveIn.GetCapabilities(i));
+            }
+            audioSList.Items.Clear();
+            foreach(var source in audioSources)
+            {
+                ListViewItem device = new ListViewItem(source.ProductName);
+                device.SubItems.Add(new ListViewItem.ListViewSubItem(device, source.Channels.ToString()));
+                audioSList.Items.Add(device);
+            }
+        }  
+        private void StartSbutton_Click(object sender, EventArgs e) 
+        {
+            if(recording==false)
+            {
+                if (audioSList.SelectedItems.Count == 0) return;
+                recording = true;
+                int deviceNumber = audioSList.SelectedItems[0].Index;
+                inputRec = new WaveIn
+                {
+                    WaveFormat = new WaveFormat(44100, WaveIn.GetCapabilities(deviceNumber).Channels)
+                };
+                inputRec.DataAvailable += RecorderOnDataAvailable;
+                outputWaveProvider = new BufferedWaveProvider(inputRec.WaveFormat);
+
+                player = new WaveOut
+                {
+                    DeviceNumber = 0
+                };
+                player.Init(outputWaveProvider);
+                player.Play();
+                inputRec.StartRecording(); 
+            }
+
+            else
+            {
+                inputRec.StopRecording();
+                player.Stop();
+                player.Dispose();
+                inputRec.Dispose();
+                outputWaveProvider.ClearBuffer();
+                recording = false;
+            }
+
+        }
+       
+        #endregion
+        #region Packet_Handling
+        /// <summary>
+        /// Method called to receive Audio data via UDP packets on designated port.
+        /// </summary>
+        private void ReceiveTransmition()
+        {
+            int listenPort = 11000;
+            UdpClient listener = new UdpClient(listenPort);
+            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
+            try
+            {
+                while (true)
+                {
+                    byte[] bytes = listener.Receive(ref groupEP);
+                    Console.WriteLine("Received Something");
+                    outputWaveProvider.AddSamples(bytes, 0, bytes.Length);      
+                }
+            }
+            catch (SocketException e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                listener.Close();
+            }
+        }
+        /// <summary>
+        /// Method used to start UDP listener to receive data on designated port. 
+        /// </summary>
         private void StartListener()
         {
             int listenPort = 11110;
             UdpClient listener = new UdpClient(listenPort);
             IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
-
             try
             {
                 while (true)
@@ -109,104 +183,8 @@ namespace ClientApp
                 listener.Close();
             }
         }
-        private void UpdateBox(string text)
-        {
-            this.label3.Text = text;
-        }
-
-        private void button1_Click_1(object sender, EventArgs e) //Wybór urządzenia wejściowego
-        {
-            List<NAudio.Wave.WaveInCapabilities> audioSources = new List<NAudio.Wave.WaveInCapabilities>();
-
-            for(int i=0;i< NAudio.Wave.WaveIn.DeviceCount;i++)
-            {
-                audioSources.Add(NAudio.Wave.WaveIn.GetCapabilities(i));
-            }
-            audioSList.Items.Clear();
-            foreach(var source in audioSources)
-            {
-                ListViewItem device = new ListViewItem(source.ProductName);
-                device.SubItems.Add(new ListViewItem.ListViewSubItem(device, source.Channels.ToString()));
-                audioSList.Items.Add(device);
-            }
-
-        }
-
-        private void startSButton_Click(object sender, EventArgs e) //Nagrywanie i przetywanie nagrywania
-        {
-            if(recording==false)
-            {
-                
-             
-                if (audioSList.SelectedItems.Count == 0) return;
-                recording = true;
-                int deviceNumber = audioSList.SelectedItems[0].Index;
-                inputRec = new WaveIn();
-                inputRec.WaveFormat=new WaveFormat(44100, NAudio.Wave.WaveIn.GetCapabilities(deviceNumber).Channels);
-                inputRec.DataAvailable += RecorderOnDataAvailable;
-                outputWaveProvider = new BufferedWaveProvider(inputRec.WaveFormat);
-
-                player = new WaveOut();
-                player.DeviceNumber = 0;
-                player.Init(outputWaveProvider);
-                player.Play();
-                inputRec.StartRecording();
-
-                
-                
-            }
-            else
-            {
-
-                inputRec.StopRecording();
-                player.Stop();
-                player.Dispose();
-                inputRec.Dispose();
-                outputWaveProvider.ClearBuffer();
-                recording = false;
-            }
-        }
-
-        private void WOut_PlaybackStopped(object sender, NAudio.Wave.StoppedEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-        private void RecorderOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
-        {
-            client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
-        }
-        private void Connect()
-        {
-
-        }
-        private void Refresh()
-        {
-            int listenPort = 11000;
-            UdpClient listener = new UdpClient(listenPort);
-            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
-
-            try
-            {
-                while (true)
-                {
-                    byte[] bytes = listener.Receive(ref groupEP);
-
-                    Console.WriteLine("Received Something");
-                    //byte[] decodedBytes = bytes.Reverse().ToArray();
-                    
-                    outputWaveProvider.AddSamples(bytes, 0, bytes.Length);
-                   
-                }
-            }
-            catch (SocketException e)
-            {
-                Console.WriteLine(e);
-            }
-            finally
-            {
-                listener.Close();
-            }
-        }
+        #endregion
+        #region Cryptography
         private byte[] Encode(byte[] bytes)
         {
             byte[] bt= new byte[bytes.Length];
@@ -217,7 +195,43 @@ namespace ClientApp
             byte[] bt = new byte[bytes.Length];
             return bt;
         }
+        #endregion 
+        #region Audio_Management
+        /// <summary>
+        /// Method to play internal call sound
+        /// </summary>
+        private void PlayCall()
+        {
+            int i = 0;
+            SoundPlayer simpleSound;
+            while (i<3)
+               {
+                    simpleSound = new SoundPlayer(@"C:\Users\Krzysiek\Desktop\Sounds\internal.wav");
+                    simpleSound.Play();
+                    Thread.Sleep(11500);
+                    i += 1;
+               }
+                    
 
+        }
+        /// <summary>
+        /// Method to play ring sound
+        /// </summary>
+        private void PlayRing()
+        {
+            SoundPlayer simpleSound;
+            simpleSound = new SoundPlayer(@"C:\Users\Krzysiek\Desktop\Sounds\call_ring.wav");
+            simpleSound.Play();
+        }
+        private void WOut_PlaybackStopped(object sender, NAudio.Wave.StoppedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+        private void RecorderOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
+        {
+            client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
+        }
+        #endregion
 
     }
 }
