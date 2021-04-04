@@ -12,8 +12,15 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Net.Sockets;
+using System.IO;
 using NAudio;
-
+using NAudio.Wave;
+/*TODO
+ * Szyfrowanie
+ * NEGOCJACJA
+ * PINGOWANIE
+ * GUI
+*/
 namespace ClientApp
 {
     public partial class ClientForm : Form
@@ -29,11 +36,18 @@ namespace ClientApp
         public delegate void delUpdateBox(string text);
         public bool recording = false;
 
-        ThreadStart threadStart;
-        Thread receiverThread;
+        ThreadStart threadStart,audThreadStart;
+        Thread receiverThread, audioThread;
+     
+        WaveIn inputRec;
+        BufferedWaveProvider bufferedWaveProvider;
+        BufferedWaveProvider outputWaveProvider;
+        SavingWaveProvider savingWaveProvider;
+        WaveOut player = new WaveOut();
+        
+        //private NAudio.Wave.WaveIn sourceStream = null;
+        // private NAudio.Wave.DirectSoundOut waveOut = null;
 
-        private NAudio.Wave.WaveIn sourceStream = null;
-        private NAudio.Wave.DirectSoundOut waveOut = null;
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -69,13 +83,16 @@ namespace ClientApp
         private void ClientForm_Load(object sender, EventArgs e)
         {
             threadStart = new ThreadStart(StartListener);
+            audThreadStart = new ThreadStart(Refresh);
             receiverThread = new Thread(threadStart);
+            audioThread = new Thread(audThreadStart);
             receiverThread.Name = "Receiver Thread";
             receiverThread.Start();
+            audioThread.Start();
         }
         public void StartListener()
         {
-            int listenPort = 11000;
+            int listenPort = 11110;
             UdpClient listener = new UdpClient(listenPort);
             IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
 
@@ -84,8 +101,6 @@ namespace ClientApp
                 while (true)
                 {
                     byte[] bytes = listener.Receive(ref groupEP);
-                    //  Console.WriteLine($"Received broadcast from {groupEP} :");
-                    // Console.WriteLine($" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
                     delUpdateBox updateBox = new delUpdateBox(UpdateBox);
                     this.label3.BeginInvoke(updateBox, $" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
                 }
@@ -126,44 +141,80 @@ namespace ClientApp
         {
             if(recording==false)
             {
+                
+             
                 if (audioSList.SelectedItems.Count == 0) return;
-                int deviceNumber = audioSList.SelectedItems[0].Index;
-
-                sourceStream = new NAudio.Wave.WaveIn();
-                sourceStream.DeviceNumber = deviceNumber;
-                sourceStream.WaveFormat = new NAudio.Wave.WaveFormat(44100, NAudio.Wave.WaveIn.GetCapabilities(deviceNumber).Channels);
-                //
-                byte[] buffer = new byte[44100];
-                //
-                NAudio.Wave.WaveInProvider waveProv = new NAudio.Wave.WaveInProvider(sourceStream);
-                waveOut = new NAudio.Wave.DirectSoundOut();
-               
-                waveOut.Init(waveProv);
-                sourceStream.StartRecording();
-                waveProv.Read(buffer, 0, 44100);
-              
-                waveOut.Play();
                 recording = true;
+                int deviceNumber = audioSList.SelectedItems[0].Index;
+                inputRec = new WaveIn();
+                inputRec.WaveFormat=new WaveFormat(44100, NAudio.Wave.WaveIn.GetCapabilities(deviceNumber).Channels);
+                inputRec.DataAvailable += RecorderOnDataAvailable;
+                outputWaveProvider = new BufferedWaveProvider(inputRec.WaveFormat);
+
+                player = new WaveOut();
+                player.DeviceNumber = 0;
+                player.Init(outputWaveProvider);
+                player.Play();
+                inputRec.StartRecording();
+
+                
+                
             }
             else
             {
-                
-                if(waveOut!=null)
-                {
-                    waveOut.Stop();
-                    waveOut.Dispose();
-                    waveOut = null;
-                }
-                if( sourceStream !=null)
-                {
-                    sourceStream.StopRecording();
-                    sourceStream.Dispose();
-                    sourceStream = null;
 
-                }
+                inputRec.StopRecording();
+                player.Stop();
+                player.Dispose();
+                inputRec.Dispose();
+                outputWaveProvider.ClearBuffer();
+                bufferedWaveProvider.ClearBuffer();
                 recording = false;
             }
         }
-           
+
+        private void WOut_PlaybackStopped(object sender, NAudio.Wave.StoppedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+        private void RecorderOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
+        {
+
+           // bufferedWaveProvider.AddSamples(waveInEventArgs.Buffer, 0, waveInEventArgs.BytesRecorded);
+            client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
+
+        }
+        public void Connect()
+        {
+
+        }
+        public void Refresh()
+        {
+            int listenPort = 11000;
+            UdpClient listener = new UdpClient(listenPort);
+            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
+
+            try
+            {
+                while (true)
+                {
+                    byte[] bytes = listener.Receive(ref groupEP);
+                    // outputWaveProvider.ClearBuffer();
+                    Console.WriteLine("Received Something");
+                    outputWaveProvider.AddSamples(bytes, 0, bytes.Length);
+                   
+                   // this.label3.BeginInvoke(updateBox, $" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+                }
+            }
+            catch (SocketException e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                listener.Close();
+            }
+        }
+
     }
 }
