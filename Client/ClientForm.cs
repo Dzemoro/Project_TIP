@@ -211,7 +211,8 @@ namespace ClientApp
                     Thread.Sleep(11500);
                     i += 1;
                }
-                    
+            
+                  
 
         }
         /// <summary>

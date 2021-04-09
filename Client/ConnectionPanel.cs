@@ -46,5 +46,15 @@ namespace ClientApp
                 MessageBox.Show("Invalid address");
             }
         }
+
+        private void exitButton_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void miniButton_Click(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Minimized;
+        }
     }
 }

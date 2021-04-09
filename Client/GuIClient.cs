@@ -20,7 +20,8 @@ namespace ClientApp
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ClientForm());
+            Application.Run(new ConnectionPanel());
+            //Application.Run(new ClientForm());
 
         }
     }
