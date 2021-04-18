@@ -33,10 +33,11 @@ namespace ClientApp
                     
                         addressBox.ForeColor = Color.Green;
                         string temp = addressBox.Text;
-                        IPAddress ipAddress = IPAddress.Parse(temp);
-
+                        Console.WriteLine(temp);
+                       // IPAddress ipAddress = IPAddress.Parse(temp);
+                        tcpClient = new TcpClient(temp, 8001);
                         string msg = "HELL:" + getIPAddress() + ":8001:" + userBox.Text;
-
+                        Console.WriteLine(msg);
                         Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
                    
                     try
@@ -50,8 +51,10 @@ namespace ClientApp
                         String responseData = String.Empty;
                         Int32 bytes = stream.Read(data, 0, data.Length);
                         responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                        Console.WriteLine("Response:"+responseData);
                         string[] words = responseData.Split(':');
-                        if(words[0]=="PORT" && Int32.Parse(words[1])>=1024&& Int32.Parse(words[1])<=49151)
+
+                        if(words[0]=="PORT" && Int32.Parse(words[1])>=1024 && Int32.Parse(words[1])<=65535)
                         {
                             msg = "OKAY:" + words[1];
                             data = System.Text.Encoding.ASCII.GetBytes(msg);
@@ -63,6 +66,7 @@ namespace ClientApp
                         else
                         {
                             msg = "NACK";
+                            Console.WriteLine("OOPS");
                             data = System.Text.Encoding.ASCII.GetBytes(msg);
                             stream.Write(data, 0, data.Length);
 
