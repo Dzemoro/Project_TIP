@@ -22,6 +22,15 @@ namespace ClientApp
             InitializeComponent();
             this.client = new Client();
         }
+        public ClientForm(int port, string ipAddress)
+        {
+            InitializeComponent();
+            this.client = new Client();
+            this.port = port;
+            this.ipAddress = ipAddress;
+        }
+        private int port;
+        private string ipAddress;
         public delegate void delUpdateBox(string text);
         public bool recording = false;
 
