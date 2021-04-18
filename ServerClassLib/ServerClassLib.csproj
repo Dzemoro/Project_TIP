@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AbstractServer.cs" />
+    <Compile Include="ServerAsync.cs" />
     <Compile Include="ServerUDP.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
