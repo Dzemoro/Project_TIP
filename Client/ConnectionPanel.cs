@@ -30,73 +30,91 @@ namespace ClientApp
             {
                 if ((new Regex(@"^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")).IsMatch(addressBox.Text))
                 {
-                    
+                        if (userBox.Text.Length == 0)
+                        {
+                            MessageBox.Show("Invalid Username");
+                            return;
+                        }
+
                         addressBox.ForeColor = Color.Green;
                         string temp = addressBox.Text;
                         Console.WriteLine(temp);
-                       // IPAddress ipAddress = IPAddress.Parse(temp);
-                        tcpClient = new TcpClient(temp, 8001);
                         string msg = "HELL:" + getIPAddress() + ":8001:" + userBox.Text;
-                        Console.WriteLine(msg);
-                        Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
-                   
+                    // IPAddress ipAddress = IPAddress.Parse(temp);
                     try
                     {
-                        NetworkStream stream = tcpClient.GetStream();
+                        tcpClient = new TcpClient(temp, 8001);
+                        msg = "HELL:" + getIPAddress() + ":8001:" + userBox.Text;
+                        Console.WriteLine(msg);
+                
+
+                        Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
+                        try
+                        {
+                            NetworkStream stream = tcpClient.GetStream();
        
-                        stream.Write(data, 0, data.Length);
-                        Console.WriteLine("Sent: {0}", msg);
-                        //ODPOWIEDŹ
-                        data = new Byte[256];
-                        String responseData = String.Empty;
-                        Int32 bytes = stream.Read(data, 0, data.Length);
-                        responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-                        Console.WriteLine("Response:"+responseData);
-                        string[] words = responseData.Split(':');
-
-                        if(words[0]=="PORT" && Int32.Parse(words[1])>=1024 && Int32.Parse(words[1])<=65535)
-                        {
-                            msg = "OKAY:" + words[1];
-                            data = System.Text.Encoding.ASCII.GetBytes(msg);
                             stream.Write(data, 0, data.Length);
-                            clientForm = new ClientForm(Int32.Parse(words[1]), temp);
-                            clientForm.Show();
-                            this.Hide();
-                        }
-                        else
-                        {
-                            msg = "NACK";
-                            Console.WriteLine("OOPS");
-                            data = System.Text.Encoding.ASCII.GetBytes(msg);
-                            stream.Write(data, 0, data.Length);
+                            Console.WriteLine("Sent: {0}", msg);
+                            //ODPOWIEDŹ
+                            data = new Byte[256];
+                            String responseData = String.Empty;
+                            Int32 bytes = stream.Read(data, 0, data.Length);
+                            responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                            Console.WriteLine("Response:"+responseData);
+                            string[] words = responseData.Split(':');
 
-                        }
+                            if(words[0]=="PORT" && Int32.Parse(words[1])>=1024 && Int32.Parse(words[1])<=65535)
+                            {
+                                msg = "OKAY:" + words[1];
+                                data = System.Text.Encoding.ASCII.GetBytes(msg);
+                                stream.Write(data, 0, data.Length);
+                                clientForm = new ClientForm(Int32.Parse(words[1]), temp, userBox.Text);
+                                stream.Close();
+                                tcpClient.Close();
+                                clientForm.Show();
+                                this.Hide();
+
+                            }
+                            else
+                            {
+                                msg = "NACK";
+                                Console.WriteLine("OOPS");
+                                data = System.Text.Encoding.ASCII.GetBytes(msg);
+                                stream.Write(data, 0, data.Length);
+                                stream.Close();
+                                tcpClient.Close();
+
+                            }
                     
-                        // ZAMYKANIE I OTWARCIE NA NOWYM PORCIE
-                        stream.Close();
-                        tcpClient.Close();
+                            // ZAMYKANIE I OTWARCIE NA NOWYM PORCIE
+                          
                        
+                        }
+                        catch (System.NullReferenceException exception)
+                        {
+                            Console.WriteLine("NULLReferenceException: {0}", exception);
+                            MessageBox.Show("Nie znaleziono serwera o podanym adresie");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Another exception: {0}", ex);
+                        }
+
+
+                        /*
+                        TcpListener l = new TcpListener(IPAddress.Loopback, 0);
+                        l.Start();
+                        int port = ((IPEndPoint)l.LocalEndpoint).Port;
+                        Console.WriteLine(port);
+                        l.Stop();
+
+                        */
                     }
-                    catch (System.NullReferenceException exception)
+                    catch (SocketException se)
                     {
-                        Console.WriteLine("NULLReferenceException: {0}", exception);
-                        MessageBox.Show("Nie znaleziono serwera o podanym adresie");
+                        //Console.WriteLine("NULLReferenceException: {0}", se);
+                        MessageBox.Show("Unable to connect to the server");
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Another exception: {0}", ex);
-                    }
-
-
-                    /*
-                    TcpListener l = new TcpListener(IPAddress.Loopback, 0);
-                    l.Start();
-                    int port = ((IPEndPoint)l.LocalEndpoint).Port;
-                    Console.WriteLine(port);
-                    l.Stop();
-
-                    */
-
 
 
                 }
