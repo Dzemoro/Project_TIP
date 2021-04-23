@@ -34,18 +34,58 @@ namespace ServerClassLib
 
         protected override void BeginDataTransmission(NetworkStream stream)
         {
-            string portResponse = "PORT:";
-
             byte[] buffer = new byte[1024];
-            Console.WriteLine("Working");
-            var data = GetData(stream, buffer);
-            if(data != null)
+            string portResponse = "PORT:";
+            string listResponse = "LIST";
+            string decline = "NACK";
+
+            byte[] declineByte = new ASCIIEncoding().GetBytes(decline);
+
+            while (true)
             {
-                users.Add(data[3], data[1]);
-                int portNumber = FreeTcpPort();
-                portResponse += portNumber.ToString();
-                byte[] portResponseByte = new ASCIIEncoding().GetBytes(portResponse);
-                stream.Write(portResponseByte, 0, portResponseByte.Length);
+                var data = GetData(stream, buffer);
+                if(data != null)
+                {
+                    if (data[0] == "HELL")
+                    {
+                        if(data.Length < 4)
+                        {
+                            Console.WriteLine("Invalid data");
+                            stream.Write(declineByte, 0, declineByte.Length);
+                        }
+                        else
+                        {
+                            Console.WriteLine(data[3]+" connected");
+                            users.Add(data[3], data[1]);
+                            int portNumber = FreeTcpPort();
+                            portResponse += portNumber.ToString();
+                            byte[] portResponseByte = new ASCIIEncoding().GetBytes(portResponse);
+                            stream.Write(portResponseByte, 0, portResponseByte.Length);
+                            portResponse = "PORT:";
+                        }
+                    }
+                    else if (data[0] == "LIST")
+                    {
+                        if (data.Length < 2)
+                        {
+                            Console.WriteLine("Invalid data");
+                            stream.Write(declineByte, 0, declineByte.Length);
+                        }
+                        else
+                        {
+                            foreach (string key in users.Keys)
+                            {
+                                if (key != data[1])
+                                {
+                                    listResponse += ":" + key;
+                                }
+                            }
+                            byte[] listResponseByte = new ASCIIEncoding().GetBytes(listResponse);
+                            stream.Write(listResponseByte, 0, listResponseByte.Length);
+                            listResponse = "LIST";
+                        }
+                    }
+                }
             }
         }
         static int FreeTcpPort()
@@ -72,19 +112,9 @@ namespace ServerClassLib
         }
         private string[] GetData(NetworkStream stream, byte[] buffer)
         {
-            string decline = "NACK";
             string msg = ByteToString(stream, buffer);
             var temp = msg.Split(':');
-            if(temp.Length < 4)
-            {
-                byte[] declineByte = new ASCIIEncoding().GetBytes(decline);
-                stream.Write(declineByte, 0, declineByte.Length);
-                return null;
-            }
-            else
-            {
-                return temp;
-            }
+            return temp;
         }
         public override void Start()
         {
