@@ -22,20 +22,41 @@ namespace ClientApp
             InitializeComponent();
             this.client = new Client();
         }
-        public ClientForm(int port, string ipAddress)
+        public ClientForm(int port, string ipAddress, string username)
         {
             InitializeComponent();
             this.client = new Client();
             this.port = port;
             this.ipAddress = ipAddress;
+            this.username = username;
+            try
+            {
+                //TEMP
+                tcpClient = new TcpClient(ipAddress, 8001);
+                listThreadStart = new ThreadStart(GetList);
+                listThread = new Thread(listThreadStart);
+                listThread.Start();
+                //tcpClient = new TcpClient(ipAddress, port);
+            }
+            catch(SocketException se)
+            {
+                MessageBox.Show("Connection Lost");
+                ConnectionPanel connectionPanel = new ConnectionPanel();
+                connectionPanel.Show();
+                this.Close();
+            }
+           
+
+
         }
         private int port;
-        private string ipAddress;
+        private string ipAddress,username;
+        private TcpClient tcpClient;
         public delegate void delUpdateBox(string text);
         public bool recording = false;
 
-        ThreadStart threadStart,audThreadStart,sigThreadStart;
-        Thread receiverThread, audioThread, sigThread;
+        ThreadStart threadStart,audThreadStart,sigThreadStart,listThreadStart;
+        Thread receiverThread, audioThread, sigThread, listThread;
         WaveIn inputRec;
         BufferedWaveProvider outputWaveProvider;
         WaveOut player = new WaveOut();
@@ -55,35 +76,7 @@ namespace ClientApp
         #region Interface_Handling     
         private void SendButton_Click(object sender, EventArgs e)
         {
-            if (addressbox.Text.Length != 0 && addressbox.Text.Length <= 15)
-            {
-                if ((new Regex(@"^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")).IsMatch(addressbox.Text))
-                {
-                    addressbox.ForeColor = Color.Green;
-                    String temp = addressbox.Text;
-                    IPAddress ipaddress = IPAddress.Parse(temp);
-                    if (message.Text.Length == 0)
-                    {
-                        message.Text = "PING";
-                        client.sendMessage(ipaddress, "PING");
-                    };
-                    temp = message.Text;
-                    client.sendMessage(ipaddress, temp);
-                    sigThreadStart= new ThreadStart(PlayCall);
-                    sigThread = new Thread(sigThreadStart);
-                    sigThread.Start();
-
-                }
-                else
-                {
-                    addressbox.ForeColor = Color.Red;
-                    MessageBox.Show("Invalid address");
-                }
-            }
-            else
-            {
-                MessageBox.Show("Invalid address");
-            }
+            playCall();
         }
         private void UpdateBox(string text)
         {
@@ -205,7 +198,28 @@ namespace ClientApp
             byte[] bt = new byte[bytes.Length];
             return bt;
         }
-        #endregion 
+
+        private void callButton_Click(object sender, EventArgs e)
+        {
+            const string message ="Are you sure that you would like to call?";
+            const string caption = "Calling";
+            var result = MessageBox.Show(message, caption,
+                                         MessageBoxButtons.YesNo,
+                                         MessageBoxIcon.Question);
+
+            // If the no button was pressed ...
+            if (result == DialogResult.No)
+            {
+                // cancel the closure of the form.
+
+            }
+            else
+            {
+
+            }
+        }
+        #endregion
+
         #region Audio_Management
         /// <summary>
         /// Method to play internal call sound
@@ -243,6 +257,85 @@ namespace ClientApp
             client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
         }
         #endregion
+        void playCall()
+        {
+            if (addressbox.Text.Length != 0 && addressbox.Text.Length <= 15)
+            {
+                if ((new Regex(@"^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")).IsMatch(addressbox.Text))
+                {
+                    addressbox.ForeColor = Color.Green;
+                    String temp = addressbox.Text;
+                    IPAddress ipaddress = IPAddress.Parse(temp);
+                    if (message.Text.Length == 0)
+                    {
+                        message.Text = "PING";
+                        client.sendMessage(ipaddress, "PING");
+                    };
+                    temp = message.Text;
+                    client.sendMessage(ipaddress, temp);
+                    sigThreadStart = new ThreadStart(PlayCall);
+                    sigThread = new Thread(sigThreadStart);
+                    sigThread.Start();
 
+                }
+                else
+                {
+                    addressbox.ForeColor = Color.Red;
+                    MessageBox.Show("Invalid address");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Invalid address");
+            }
+        }
+        void GetList()
+        {
+            while(true)
+            {
+                
+                String msg = "LIST:" + this.username;
+                Console.WriteLine(msg);
+                NetworkStream stream = tcpClient.GetStream();
+                Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
+                stream.Write(data, 0, data.Length);
+                String responseData = String.Empty;
+                //users.Items.Add("Perry the platypus");
+                Int32 bytes = stream.Read(data, 0, data.Length);
+                responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                Console.WriteLine("Response:" + responseData);
+                string[] words = responseData.Split(':');
+                //Fill userlist
+                users.Items.Clear();
+                for (int i = 1; i < words.Length; i++)
+                {
+                    //Check for current user
+                    if (!words[i].Equals(username))
+                    {
+                        users.Items.Add(words[i]);
+                    }
+
+                }
+                Thread.Sleep(5000);
+            }
+           
+            
+        }
+        private void enableCall()
+        {
+            if(!callButton.Enabled)
+            {
+                callButton.Enabled = true;
+            }
+        }
+        private IPAddress getIPAddress()
+        {
+            String strHostName = string.Empty;
+            strHostName = Dns.GetHostName();
+            IPHostEntry ipHostEntry = Dns.GetHostEntry(strHostName);
+            IPAddress[] address = ipHostEntry.AddressList;
+            return address[4];
+
+        }
     }
 }

@@ -41,12 +41,16 @@
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.refreshB = new System.Windows.Forms.Button();
             this.startSbutton = new System.Windows.Forms.Button();
+            this.micGroup = new System.Windows.Forms.GroupBox();
+            this.users = new System.Windows.Forms.ListBox();
+            this.callButton = new System.Windows.Forms.Button();
             this.audioPanel.SuspendLayout();
+            this.micGroup.SuspendLayout();
             this.SuspendLayout();
             // 
             // send_button
             // 
-            this.send_button.Location = new System.Drawing.Point(193, 140);
+            this.send_button.Location = new System.Drawing.Point(686, 155);
             this.send_button.Name = "send_button";
             this.send_button.Size = new System.Drawing.Size(75, 23);
             this.send_button.TabIndex = 0;
@@ -57,7 +61,7 @@
             // message
             // 
             this.message.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.message.Location = new System.Drawing.Point(115, 12);
+            this.message.Location = new System.Drawing.Point(608, 27);
             this.message.Multiline = true;
             this.message.Name = "message";
             this.message.Size = new System.Drawing.Size(153, 52);
@@ -66,7 +70,7 @@
             // addressbox
             // 
             this.addressbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.addressbox.Location = new System.Drawing.Point(115, 70);
+            this.addressbox.Location = new System.Drawing.Point(608, 85);
             this.addressbox.MaxLength = 15;
             this.addressbox.Name = "addressbox";
             this.addressbox.Size = new System.Drawing.Size(153, 24);
@@ -75,7 +79,7 @@
             // messageLbl
             // 
             this.messageLbl.AutoSize = true;
-            this.messageLbl.Location = new System.Drawing.Point(35, 19);
+            this.messageLbl.Location = new System.Drawing.Point(528, 34);
             this.messageLbl.Name = "messageLbl";
             this.messageLbl.Size = new System.Drawing.Size(50, 13);
             this.messageLbl.TabIndex = 3;
@@ -84,7 +88,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(35, 77);
+            this.label1.Location = new System.Drawing.Point(528, 92);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(58, 13);
             this.label1.TabIndex = 4;
@@ -93,7 +97,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(35, 113);
+            this.label2.Location = new System.Drawing.Point(528, 128);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(53, 13);
             this.label2.TabIndex = 5;
@@ -102,7 +106,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(112, 113);
+            this.label3.Location = new System.Drawing.Point(605, 128);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(0, 13);
             this.label3.TabIndex = 6;
@@ -110,7 +114,7 @@
             // audioPanel
             // 
             this.audioPanel.Controls.Add(this.audioSList);
-            this.audioPanel.Location = new System.Drawing.Point(285, 3);
+            this.audioPanel.Location = new System.Drawing.Point(32, 27);
             this.audioPanel.Name = "audioPanel";
             this.audioPanel.Size = new System.Drawing.Size(261, 169);
             this.audioPanel.TabIndex = 0;
@@ -143,7 +147,7 @@
             // 
             // refreshB
             // 
-            this.refreshB.Location = new System.Drawing.Point(552, 3);
+            this.refreshB.Location = new System.Drawing.Point(299, 27);
             this.refreshB.Name = "refreshB";
             this.refreshB.Size = new System.Drawing.Size(128, 29);
             this.refreshB.TabIndex = 7;
@@ -153,7 +157,7 @@
             // 
             // startSbutton
             // 
-            this.startSbutton.Location = new System.Drawing.Point(552, 38);
+            this.startSbutton.Location = new System.Drawing.Point(299, 62);
             this.startSbutton.Name = "startSbutton";
             this.startSbutton.Size = new System.Drawing.Size(128, 29);
             this.startSbutton.TabIndex = 8;
@@ -161,14 +165,47 @@
             this.startSbutton.UseVisualStyleBackColor = true;
             this.startSbutton.Click += new System.EventHandler(this.StartSbutton_Click);
             // 
+            // micGroup
+            // 
+            this.micGroup.Controls.Add(this.audioPanel);
+            this.micGroup.Controls.Add(this.startSbutton);
+            this.micGroup.Controls.Add(this.refreshB);
+            this.micGroup.Location = new System.Drawing.Point(12, 12);
+            this.micGroup.Name = "micGroup";
+            this.micGroup.Size = new System.Drawing.Size(453, 244);
+            this.micGroup.TabIndex = 9;
+            this.micGroup.TabStop = false;
+            this.micGroup.Text = "Microphone Settings";
+            // 
+            // users
+            // 
+            this.users.Font = new System.Drawing.Font("Comic Sans MS", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.users.FormattingEnabled = true;
+            this.users.ItemHeight = 23;
+            this.users.Location = new System.Drawing.Point(12, 262);
+            this.users.Name = "users";
+            this.users.Size = new System.Drawing.Size(293, 188);
+            this.users.TabIndex = 10;
+            // 
+            // callButton
+            // 
+            this.callButton.Enabled = false;
+            this.callButton.Location = new System.Drawing.Point(311, 262);
+            this.callButton.Name = "callButton";
+            this.callButton.Size = new System.Drawing.Size(141, 27);
+            this.callButton.TabIndex = 11;
+            this.callButton.Text = "Call";
+            this.callButton.UseVisualStyleBackColor = true;
+            this.callButton.Click += new System.EventHandler(this.callButton_Click);
+            // 
             // ClientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(692, 337);
-            this.Controls.Add(this.startSbutton);
-            this.Controls.Add(this.refreshB);
-            this.Controls.Add(this.audioPanel);
+            this.ClientSize = new System.Drawing.Size(802, 620);
+            this.Controls.Add(this.callButton);
+            this.Controls.Add(this.users);
+            this.Controls.Add(this.micGroup);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -180,6 +217,7 @@
             this.Text = "Connection Maganger";
             this.Load += new System.EventHandler(this.ClientForm_Load);
             this.audioPanel.ResumeLayout(false);
+            this.micGroup.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -200,6 +238,9 @@
         private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.Button refreshB;
         private System.Windows.Forms.Button startSbutton;
+        private System.Windows.Forms.GroupBox micGroup;
+        private System.Windows.Forms.ListBox users;
+        private System.Windows.Forms.Button callButton;
     }
 }
 
