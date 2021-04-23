@@ -42,6 +42,7 @@ namespace ClientApp
 
         private void ClientForm_Load(object sender, EventArgs e)
         {
+
             threadStart = new ThreadStart(StartListener);
             audThreadStart = new ThreadStart(ReceiveTransmition);
             receiverThread = new Thread(threadStart);

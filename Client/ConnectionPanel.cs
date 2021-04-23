@@ -71,12 +71,11 @@ namespace ClientApp
                             stream.Write(data, 0, data.Length);
 
                         }
-                        //Console.WriteLine("Received: {0}", responseData);
-
+                    
                         // ZAMYKANIE I OTWARCIE NA NOWYM PORCIE
                         stream.Close();
                         tcpClient.Close();
-                        //Byte[] data = System.Text.Encoding.ASCII.GetBytes("HELL");
+                       
                     }
                     catch (System.NullReferenceException exception)
                     {
