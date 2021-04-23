@@ -39,12 +39,14 @@ namespace ServerClassLib
             byte[] buffer = new byte[1024];
             Console.WriteLine("Working");
             var data = GetData(stream, buffer);
-            users.Add(data[3], data[1]);
-            int portNumber = FreeTcpPort();
-            portResponse += portNumber.ToString();
-            byte[] portResponseByte = new ASCIIEncoding().GetBytes(portResponse);
-            stream.Write(portResponseByte, 0, portResponseByte.Length);
-
+            if(data != null)
+            {
+                users.Add(data[3], data[1]);
+                int portNumber = FreeTcpPort();
+                portResponse += portNumber.ToString();
+                byte[] portResponseByte = new ASCIIEncoding().GetBytes(portResponse);
+                stream.Write(portResponseByte, 0, portResponseByte.Length);
+            }
         }
         static int FreeTcpPort()
         {
@@ -70,10 +72,19 @@ namespace ServerClassLib
         }
         private string[] GetData(NetworkStream stream, byte[] buffer)
         {
-            string[] result = new string[4];
+            string decline = "NACK";
             string msg = ByteToString(stream, buffer);
-            result = msg.Split(':');
-            return result;
+            var temp = msg.Split(':');
+            if(temp.Length < 4)
+            {
+                byte[] declineByte = new ASCIIEncoding().GetBytes(decline);
+                stream.Write(declineByte, 0, declineByte.Length);
+                return null;
+            }
+            else
+            {
+                return temp;
+            }
         }
         public override void Start()
         {
