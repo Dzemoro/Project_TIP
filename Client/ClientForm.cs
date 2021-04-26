@@ -61,15 +61,15 @@ namespace ClientApp
 
         private void ClientForm_Load(object sender, EventArgs e)
         {
-
+           //TEST
             threadStart = new ThreadStart(StartListener);
             audThreadStart = new ThreadStart(ReceiveTransmition);
             receiverThread = new Thread(threadStart);
             audioThread = new Thread(audThreadStart);
           
             receiverThread.Name = "Receiver Thread";
-            receiverThread.Start();
-            audioThread.Start();
+          //  receiverThread.Start();
+           // audioThread.Start();
         }
         #region Interface_Handling     
         private void SendButton_Click(object sender, EventArgs e)
@@ -83,7 +83,13 @@ namespace ClientApp
         private void UpdateList(string text)
         {
             string[] words = text.Split(':');
+           // users.Items.Add("Perry the platypus");
             users.Items.Clear();
+            if(words.Length==1)
+            {
+                users.Items.Add("empty");
+                return;
+            }
             for(int i=1;i<words.Length;i++)
             {
                 if(!words[i].Equals(username))
@@ -99,6 +105,7 @@ namespace ClientApp
             while (true)
             {
                 String msg = "LIST:" + this.username;
+                Console.WriteLine(msg);
                 delUpdateBox = new delUpdateBox(UpdateList);
                 NetworkStream stream = tcpClient.GetStream();
                 Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
