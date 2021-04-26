@@ -45,14 +45,12 @@ namespace ClientApp
                 connectionPanel.Show();
                 this.Close();
             }
-           
-
-
         }
         private int port;
         private string ipAddress,username;
         private TcpClient tcpClient;
         public delegate void delUpdateBox(string text);
+        public delegate void delUpdateUsers(string text);
         public bool recording = false;
 
         ThreadStart threadStart,audThreadStart,sigThreadStart,listThreadStart;
@@ -81,6 +79,64 @@ namespace ClientApp
         private void UpdateBox(string text)
         {
             this.label3.Text = text;
+        }
+        private void UpdateList(string text)
+        {
+            string[] words = text.Split(':');
+            users.Items.Clear();
+            for(int i=1;i<words.Length;i++)
+            {
+                if(!words[i].Equals(username))
+                {
+                    users.Items.Add(words[i]);
+                }
+            }
+
+        }
+        void GetList()
+        {
+            delUpdateBox delUpdateBox;
+            while (true)
+            {
+                String msg = "LIST:" + this.username;
+                delUpdateBox = new delUpdateBox(UpdateList);
+                NetworkStream stream = tcpClient.GetStream();
+                Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
+                stream.Write(data, 0, data.Length);
+                String responseData = String.Empty;
+                //users.Items.Add("Perry the platypus");
+                Int32 bytes = stream.Read(data, 0, data.Length);
+                responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                Console.WriteLine("Response:" + responseData);
+                this.users.BeginInvoke(delUpdateBox, responseData);
+                Thread.Sleep(5000);
+                /* String msg = "LIST:" + this.username;
+                 Console.WriteLine(msg);
+                 NetworkStream stream = tcpClient.GetStream();
+                 Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
+                 stream.Write(data, 0, data.Length);
+                 String responseData = String.Empty;
+                 //users.Items.Add("Perry the platypus");
+                 Int32 bytes = stream.Read(data, 0, data.Length);
+                 responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                 Console.WriteLine("Response:" + responseData);
+                 string[] words = responseData.Split(':');
+                 //Fill userlist
+                 users.Items.Clear();
+                 for (int i = 1; i < words.Length; i++)
+                 {
+                     //Check for current user
+                     if (!words[i].Equals(username))
+                     {
+                         users.Items.Add(words[i]);
+                     }
+
+                 }
+                 Thread.Sleep(5000);
+                */
+            }
+
+
         }
         private void Refresh_Click(object sender, EventArgs e) 
         {
@@ -289,38 +345,7 @@ namespace ClientApp
                 MessageBox.Show("Invalid address");
             }
         }
-        void GetList()
-        {
-            while(true)
-            {
-                
-                String msg = "LIST:" + this.username;
-                Console.WriteLine(msg);
-                NetworkStream stream = tcpClient.GetStream();
-                Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
-                stream.Write(data, 0, data.Length);
-                String responseData = String.Empty;
-                //users.Items.Add("Perry the platypus");
-                Int32 bytes = stream.Read(data, 0, data.Length);
-                responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-                Console.WriteLine("Response:" + responseData);
-                string[] words = responseData.Split(':');
-                //Fill userlist
-                users.Items.Clear();
-                for (int i = 1; i < words.Length; i++)
-                {
-                    //Check for current user
-                    if (!words[i].Equals(username))
-                    {
-                        users.Items.Add(words[i]);
-                    }
-
-                }
-                Thread.Sleep(5000);
-            }
-           
-            
-        }
+       
         private void enableCall()
         {
             if(!callButton.Enabled)
