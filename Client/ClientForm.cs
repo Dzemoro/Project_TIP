@@ -109,7 +109,9 @@ namespace ClientApp
                 delUpdateBox = new delUpdateBox(UpdateList);
                 NetworkStream stream = tcpClient.GetStream();
                 Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
+               
                 stream.Write(data, 0, data.Length);
+                data = new Byte[512];
                 String responseData = String.Empty;
                 //users.Items.Add("Perry the platypus");
                 Int32 bytes = stream.Read(data, 0, data.Length);
