@@ -25,12 +25,7 @@ namespace ClientClassLib
         }
         public void sendBytes(IPAddress address, byte[] bytes)
         {
-            
-            //byte[] encodedBytes= 
-                 //= bytes.Reverse().ToArray();
-
-            Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            
+            Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);   
             IPEndPoint ep = new IPEndPoint(address, 11000);
             s.SendTo(bytes, ep);
            

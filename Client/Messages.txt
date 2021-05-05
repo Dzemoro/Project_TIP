@@ -6,8 +6,8 @@
 	Serwer odnajduje po nazwie odpowiedni adres
 	Wysyła komunikat CLL do użytkownika o podanej nazwie
 	2 Klient odpowiada np 
-		DEN -  odmowa połaczenia
-		CON -  akceptowanie połączenia+ port na którym będzie nasłuchiwał UDP
+		DENY -  odmowa połaczenia
+		CALL -  akceptowanie połączenia+ port na którym będzie nasłuchiwał UDP
 	Serwer forwarduje wiadomości jednak zapamiętuje porty
 	Żeby się nie pomieszało to można zrobić jakiś kontener z trwającymi sesjami
 	
@@ -24,7 +24,8 @@ KOMUNIKATY:
 DENY- Deny odrzuć połączenie
 HELL- HELLO próba połączenia z serwerem TCP
 CONN- Connect - akceptacja połączenia
-
+CALL- Korzych-Dellor - Dzwoni Dellor do Korzych
+DENY- Dellor - Ktoś odrzuca Dellor
 HELL:127.0.0.1:11110:USERNAME
 PORT:8001
 OKAY:8001

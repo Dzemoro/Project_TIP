@@ -16,7 +16,8 @@ namespace ClientApp
     
     public partial class ClientForm : Form
     {
-       Client client = new Client();
+        public delegate void TransmissionDataDelegate(NetworkStream stream);
+        Client client = new Client();
         public ClientForm()
         {
             InitializeComponent();
@@ -31,14 +32,20 @@ namespace ClientApp
             this.username = username;
             try
             {
+                //(String address, name String) params= (ipAddress, username);
+                //StartTCPListener(ipAddress, username);
                 //TEMP
-                tcpClient = new TcpClient(ipAddress, 8001);
-                listThreadStart = new ThreadStart(GetList);
-                listThread = new Thread(listThreadStart);
-                listThread.Start();
+                //tcpClient = new TcpClient(ipAddress, 8001);
+              //  ParameterizedThreadStart parameterizedThreadStart = new ParameterizedThreadStart(StartTCPListener);
+                
+               // tcpListeningThread = new Thread();
+                tcpListeningThreadStart = new ThreadStart(StartTCPListener);
+                tcpListeningThread = new Thread(tcpListeningThreadStart);
+                tcpListeningThread.Start();
+                //listThread.Start();
                 //tcpClient = new TcpClient(ipAddress, port);
             }
-            catch(SocketException se)
+            catch (SocketException se)
             {
                 MessageBox.Show("Connection Lost");
                 ConnectionPanel connectionPanel = new ConnectionPanel();
@@ -53,8 +60,8 @@ namespace ClientApp
         public delegate void delUpdateUsers(string text);
         public bool recording = false;
 
-        ThreadStart threadStart,audThreadStart,sigThreadStart,listThreadStart;
-        Thread receiverThread, audioThread, sigThread, listThread;
+        ThreadStart threadStart,audThreadStart,sigThreadStart, tcpListeningThreadStart;
+        Thread receiverThread, audioThread, sigThread, tcpListeningThread;
         WaveIn inputRec;
         BufferedWaveProvider outputWaveProvider;
         WaveOut player = new WaveOut();
@@ -62,7 +69,7 @@ namespace ClientApp
         private void ClientForm_Load(object sender, EventArgs e)
         {
            //TEST
-            threadStart = new ThreadStart(StartListener);
+            threadStart = new ThreadStart(StartUdpListener);
             audThreadStart = new ThreadStart(ReceiveTransmition);
             receiverThread = new Thread(threadStart);
             audioThread = new Thread(audThreadStart);
@@ -99,7 +106,7 @@ namespace ClientApp
             }
 
         }
-        void GetList()
+        private void GetList()
         {
             delUpdateBox delUpdateBox;
             while (true)
@@ -146,6 +153,18 @@ namespace ClientApp
             }
 
 
+        }
+        private void UpdateList()
+        {
+            var delUpdateBox = new delUpdateBox(UpdateList);
+            var data = new Byte[512];
+            var responseData = String.Empty;
+            NetworkStream stream = tcpClient.GetStream();
+            users.Items.Add("Perry the platypus");
+            var bytes = stream.Read(data, 0, data.Length);
+            responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+            Console.WriteLine("Response:" + responseData);
+            this.users.BeginInvoke(delUpdateBox, responseData);
         }
         private void Refresh_Click(object sender, EventArgs e) 
         {
@@ -228,7 +247,7 @@ namespace ClientApp
         /// <summary>
         /// Method used to start UDP listener to receive data on designated port. 
         /// </summary>
-        private void StartListener()
+        private void StartUdpListener()
         {
             int listenPort = 11110;
             UdpClient listener = new UdpClient(listenPort);
@@ -250,6 +269,44 @@ namespace ClientApp
             {
                 listener.Close();
             }
+        }
+        private void StartTCPListener()
+        {
+            TcpListener tcpListener =  new TcpListener(System.Net.IPAddress.Any, 11100);
+            tcpListener.Start();
+            
+            while(true)
+            {
+                var client = tcpListener.AcceptTcpClient();
+                var Stream = client.GetStream();
+                BeginDataTransmission(Stream);
+                //transmissionDelegate.BeginInvoke(Stream, TransmissionCallback, tcpClient);
+                
+            }
+
+        }
+        private void TransmissionCallback(IAsyncResult ar)
+        {
+        }
+        string ByteToString(NetworkStream stream, byte[] buffer)
+        {
+            char[] trim = { (char)0x0 };
+
+            int len = stream.Read(buffer, 0, buffer.Length);
+            if (Encoding.ASCII.GetString(buffer, 0, len) == "\r\n")
+            {
+                stream.Read(buffer, 0, buffer.Length);
+            }
+            string resultText = Encoding.ASCII.GetString(buffer).Trim(trim);
+            Array.Clear(buffer, 0, buffer.Length);
+
+            return resultText;
+        }
+        private string[] GetData(NetworkStream stream, byte[] buffer)
+        {
+            string msg = ByteToString(stream, buffer);
+            var temp = msg.Split(':');
+            return temp;
         }
         #endregion
         #region Cryptography
@@ -283,6 +340,41 @@ namespace ClientApp
 
             }
         }
+        protected void BeginDataTransmission(NetworkStream stream)
+        {
+            byte[] buffer = new byte[1024];
+            string callResponse = "CALL:";
+            string list = "LIST";
+            string decline = "NACK";
+
+            byte[] declineByte = new ASCIIEncoding().GetBytes(decline);
+
+            while (true)
+            {
+                var data = GetData(stream, buffer);
+                if (data != null)
+                {
+                   if (data[0] == "LIST")
+                    {
+                        Console.WriteLine("LIST");
+                        
+                    }
+                   else if(data[0]== "CALL")
+                    {
+                        //PlayRing();
+                        Console.WriteLine("CALL");
+                    }
+                   else if (data[0] == "NACK")
+                    {
+                        Console.WriteLine("NACK");
+                    }
+                   else if (data[0]== "PING")
+                    {
+                        Console.WriteLine("Pong");
+                    }
+                }
+            }
+        }
         #endregion
 
         #region Audio_Management
@@ -310,6 +402,7 @@ namespace ClientApp
         private void PlayRing()
         {
             SoundPlayer simpleSound;
+
             simpleSound = new SoundPlayer(@"C:\Users\Krzysiek\Desktop\Sounds\call_ring.wav");
             simpleSound.Play();
         }
@@ -322,7 +415,7 @@ namespace ClientApp
             client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
         }
         #endregion
-        void playCall()
+        private void playCall()
         {
             if (addressbox.Text.Length != 0 && addressbox.Text.Length <= 15)
             {
