@@ -18,6 +18,7 @@ namespace ClientApp
     {
         public delegate void TransmissionDataDelegate(NetworkStream stream);
         Client client = new Client();
+        NetworkStream stream;
         public ClientForm()
         {
             InitializeComponent();
@@ -35,13 +36,14 @@ namespace ClientApp
                 //(String address, name String) params= (ipAddress, username);
                 //StartTCPListener(ipAddress, username);
                 //TEMP
-                //tcpClient = new TcpClient(ipAddress, 8001);
-              //  ParameterizedThreadStart parameterizedThreadStart = new ParameterizedThreadStart(StartTCPListener);
-                
-               // tcpListeningThread = new Thread();
-                tcpListeningThreadStart = new ThreadStart(StartTCPListener);
+                tcpClient = new TcpClient(ipAddress, 8001);
+                stream = tcpClient.GetStream();
+                //  ParameterizedThreadStart parameterizedThreadStart = new ParameterizedThreadStart(StartTCPListener);
+
+                tcpListeningThreadStart = new ThreadStart(Listen);
                 tcpListeningThread = new Thread(tcpListeningThreadStart);
                 tcpListeningThread.Start();
+
                 //listThread.Start();
                 //tcpClient = new TcpClient(ipAddress, port);
             }
@@ -126,35 +128,12 @@ namespace ClientApp
                 Console.WriteLine("Response:" + responseData);
                 this.users.BeginInvoke(delUpdateBox, responseData);
                 Thread.Sleep(5000);
-                /* String msg = "LIST:" + this.username;
-                 Console.WriteLine(msg);
-                 NetworkStream stream = tcpClient.GetStream();
-                 Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
-                 stream.Write(data, 0, data.Length);
-                 String responseData = String.Empty;
-                 //users.Items.Add("Perry the platypus");
-                 Int32 bytes = stream.Read(data, 0, data.Length);
-                 responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-                 Console.WriteLine("Response:" + responseData);
-                 string[] words = responseData.Split(':');
-                 //Fill userlist
-                 users.Items.Clear();
-                 for (int i = 1; i < words.Length; i++)
-                 {
-                     //Check for current user
-                     if (!words[i].Equals(username))
-                     {
-                         users.Items.Add(words[i]);
-                     }
-
-                 }
-                 Thread.Sleep(5000);
-                */
+        
             }
 
 
         }
-        private void UpdateList()
+        private void UpdateThisList()
         {
             var delUpdateBox = new delUpdateBox(UpdateList);
             var data = new Byte[512];
@@ -215,7 +194,61 @@ namespace ClientApp
             }
 
         }
-       
+        private void Listen()
+        {
+            while (true)
+            {
+                var data = new Byte[256];
+                String responseData = String.Empty;
+
+                var bytes= stream.Read(data,0,data.Length);
+                responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                string[] words = responseData.Split(':');
+                if(words[0]=="CALL")
+                {
+
+                    playCall();
+                    string message = words[2]+" wants to talk. Accept?";
+                    string caption = "Incoming Call";
+                    var result = MessageBox.Show(message, caption,
+                                                 MessageBoxButtons.YesNo,
+                                                 MessageBoxIcon.Question);
+
+                    // If the no button was pressed ...
+                    if (result == DialogResult.No)
+                    {
+                        // cancel the closure of the form.
+                        var msg = "DENY:"+words[2];
+                    }
+                    else
+                    {
+                        var msg = "CONN:" + words[2] + ":8001";
+
+                        
+
+                    }
+                }
+                else if(words[0]=="LIST")
+                {
+                    var delUpdateBox = new delUpdateBox(UpdateList);
+                    this.users.BeginInvoke(delUpdateBox, responseData);
+                }
+                else if (words[0] == "CONN")
+                {
+                    var delUpdateBox = new delUpdateBox(UpdateList);
+                    this.users.BeginInvoke(delUpdateBox, responseData);
+                }
+                else if (words[0] == "DENY")
+                {
+                    MessageBox.Show("User Rejected Your Call");
+                    //var delUpdateBox = new delUpdateBox(UpdateList);
+                    //this.users.BeginInvoke(delUpdateBox, responseData);
+                }
+
+
+            }
+        }
+
         #endregion
         #region Packet_Handling
         /// <summary>
@@ -323,7 +356,7 @@ namespace ClientApp
 
         private void callButton_Click(object sender, EventArgs e)
         {
-            const string message ="Are you sure that you would like to call?";
+            const string message ="Are you sure that you would like to call that user?";
             const string caption = "Calling";
             var result = MessageBox.Show(message, caption,
                                          MessageBoxButtons.YesNo,
@@ -337,6 +370,7 @@ namespace ClientApp
             }
             else
             {
+                //var msg = "";
 
             }
         }
@@ -346,7 +380,6 @@ namespace ClientApp
             string callResponse = "CALL:";
             string list = "LIST";
             string decline = "NACK";
-
             byte[] declineByte = new ASCIIEncoding().GetBytes(decline);
 
             while (true)
@@ -410,6 +443,7 @@ namespace ClientApp
         {
             throw new NotImplementedException();
         }
+      //DO ZMIANY
         private void RecorderOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
         {
             client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
