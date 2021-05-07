@@ -11,14 +11,14 @@ namespace ServerClassLib
 {
     public class ServerAsync : AbstractServer
     {
-        Dictionary<string, string> users;
-        Dictionary<string, string> callMessages;
+        HashSet<Message> messages;
+        HashSet<User> users;
 
         public delegate void TransmissionDataDelegate(NetworkStream stream);
         public ServerAsync(string IPAddress = "127.0.0.1", int port = 8001) : base(System.Net.IPAddress.Parse(IPAddress), port)
         {
-            users = new Dictionary<string, string>();
-            callMessages = new Dictionary<string, string>();
+            users = new HashSet<User>();
+            messages = new HashSet<Message>();
         }
         protected override void AcceptClient()
         {
@@ -39,12 +39,13 @@ namespace ServerClassLib
         {
             byte[] buffer = new byte[1024];
             string portResponse = "PORT:";
-            string listResponse = "LIST";
             string decline = "NACK";
             string calling = "CALL:";
+            string confirm = "CONN:";
             int listCounter = 0;
-            string name = "";
             string callName = "";
+            User u = new User();
+            Message msg;
 
             byte[] declineByte = new ASCIIEncoding().GetBytes(decline);
 
@@ -62,9 +63,10 @@ namespace ServerClassLib
                         }
                         else
                         {
-                            name = data[3];
-                            Console.WriteLine(name + " connected");
-                            users.Add(name, data[1]);
+                            u.Name = data[3];
+                            u.IPAddress = data[1];
+                            Console.WriteLine(u.Name + " connected");
+                            users.Add(u);
                             listCounter = users.Count;
                             int portNumber = FreeTcpPort();
                             portResponse += portNumber.ToString();
@@ -83,7 +85,8 @@ namespace ServerClassLib
                         }
                         else
                         {
-                            callMessages.Add(data[1], data[2] + ":" + data[3]);
+                            msg = new Message(data.Skip(1).ToArray(), MessageType.CALL);
+                            messages.Add(msg);
                         }
                     }
                     else if (data[0] == "CONN")
@@ -95,26 +98,41 @@ namespace ServerClassLib
                         }
                         else
                         {
-                            
+                            msg = new Message(data.Skip(1).ToArray(), MessageType.CONN);
+                            messages.Add(msg);
                         }
                     }
                 }
                 if (listCounter != users.Count && listCounter != 0)
                 {
-                    Console.WriteLine("Wysylam do: " + name);
+                    Console.WriteLine("Wysylam do: " + u.Name);
                     SendList(stream);
                     Console.WriteLine("Wyslalem");
                     listCounter = users.Count;
                 }
-                if(callMessages.ContainsKey(name))
+                var calls = messages.Where(x => x.MessageType == MessageType.CALL && x.Informations[0] == u.Name);
+                if (calls.Count() != 0)
                 {
                     //CALL:KEY:VALUE
-                    var nickWithPort = callMessages[name].Split(':');
-                    calling += name + ":" + nickWithPort[0] + ":" + users[nickWithPort[0]] + ":" + nickWithPort[1];
+                    Message temp = calls.First();
+                    var usernamesWithPort = temp.Informations;
+                    calling += usernamesWithPort[0] + ":" + usernamesWithPort[1] + ":" + GetUserIPAddress(usernamesWithPort[1]) + ":" + usernamesWithPort[2];
                     byte[] callingByte = new ASCIIEncoding().GetBytes(calling);
                     stream.Write(callingByte, 0, callingByte.Length);
-                    callMessages.Remove(name);
+                    messages.Remove(temp);
                 }
+                var conns = messages.Where(x => x.MessageType == MessageType.CONN && x.Informations[0] == u.Name);
+                if (conns.Count() != 0)
+                {
+                    //CONN:NAME:IP:PORT
+                    Message temp = conns.First();
+                    var usernameWithPort = temp.Informations;
+                    confirm += usernameWithPort[0] + ":" + GetUserIPAddress(usernameWithPort[0]) + ":" + usernameWithPort[1];
+                    byte[] confirmByte = new ASCIIEncoding().GetBytes(confirm);
+                    stream.Write(confirmByte, 0, confirmByte.Length);
+                    messages.Remove(temp);
+                }
+
             }
         }
         static int FreeTcpPort()
@@ -171,13 +189,24 @@ namespace ServerClassLib
         private void SendList(NetworkStream stream)
         {
             string listResponse = "LIST";
-            foreach (string key in users.Keys)
+            foreach (User u in users)
             {
-                listResponse += ":" + key;
+                listResponse += ":" + u.Name;
             }
             byte[] listResponseByte = new ASCIIEncoding().GetBytes(listResponse);
             stream.Write(listResponseByte, 0, listResponseByte.Length);
             listResponse = "LIST";
+        }
+        private string GetUserIPAddress(string name)
+        {
+            foreach(User u in users)
+            {
+                if(u.Name == name)
+                {
+                    return u.IPAddress;
+                }
+            }
+            return null;
         }
         public override void Start()
         {
