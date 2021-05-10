@@ -24,9 +24,9 @@ DENY- Deny odrzuć połączenie
 HELL- HELLO próba połączenia z serwerem TCP
 
 CALL:Korzych:Dellor:8001 - Delor->Serwer
-CALL:Korzych:Dellor:127.0.0.1:8001 - Serwer->Dellor
+CALL:Korzych:Dellor:127.0.0.1:8001 - Serwer->Korzych	
 CONN:DELLOR:2001- Connect - Krzychol->Serwer
-CONN:DELLOR:127.0.0.1:2001- Connect - Serwer->Korzych
+CONN:DELLOR:127.0.0.1:2001- Connect - Serwer->Dellor
 
 
 
