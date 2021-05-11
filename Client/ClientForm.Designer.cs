@@ -50,6 +50,7 @@
             // 
             // send_button
             // 
+            this.send_button.Enabled = false;
             this.send_button.Location = new System.Drawing.Point(686, 155);
             this.send_button.Name = "send_button";
             this.send_button.Size = new System.Drawing.Size(75, 23);
@@ -60,6 +61,7 @@
             // 
             // message
             // 
+            this.message.Enabled = false;
             this.message.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.message.Location = new System.Drawing.Point(608, 27);
             this.message.Multiline = true;
@@ -69,6 +71,7 @@
             // 
             // addressbox
             // 
+            this.addressbox.Enabled = false;
             this.addressbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.addressbox.Location = new System.Drawing.Point(608, 85);
             this.addressbox.MaxLength = 15;
@@ -79,6 +82,7 @@
             // messageLbl
             // 
             this.messageLbl.AutoSize = true;
+            this.messageLbl.Enabled = false;
             this.messageLbl.Location = new System.Drawing.Point(528, 34);
             this.messageLbl.Name = "messageLbl";
             this.messageLbl.Size = new System.Drawing.Size(50, 13);
@@ -88,6 +92,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
+            this.label1.Enabled = false;
             this.label1.Location = new System.Drawing.Point(528, 92);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(58, 13);
@@ -97,6 +102,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
+            this.label2.Enabled = false;
             this.label2.Location = new System.Drawing.Point(528, 128);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(53, 13);
