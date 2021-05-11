@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Net.Sockets;
 using NAudio.Wave;
 using System.Media;
@@ -19,12 +20,13 @@ namespace ClientApp
         public delegate void TransmissionDataDelegate(NetworkStream stream);
         Client client = new Client();
         NetworkStream stream;
+        Task backgroundTask;
         public ClientForm()
         {
             InitializeComponent();
             this.client = new Client();
         }
-        public ClientForm(int port, string ipAddress, string username)
+        public ClientForm(int port, string ipAddress, string username,TcpClient tcpClient)
         {
             InitializeComponent();
             this.client = new Client();
@@ -36,10 +38,10 @@ namespace ClientApp
                 //(String address, name String) params= (ipAddress, username);
                 //StartTCPListener(ipAddress, username);
                 //TEMP
-                tcpClient = new TcpClient(ipAddress, 8001);
+                this.tcpClient = tcpClient;
                 stream = tcpClient.GetStream();
                 //  ParameterizedThreadStart parameterizedThreadStart = new ParameterizedThreadStart(StartTCPListener);
-
+               // backgroundTask = new Task();
                 tcpListeningThreadStart = new ThreadStart(Listen);
                 tcpListeningThread = new Thread(tcpListeningThreadStart);
                 tcpListeningThread.Start();
@@ -83,7 +85,9 @@ namespace ClientApp
         #region Interface_Handling     
         private void SendButton_Click(object sender, EventArgs e)
         {
-            playCall();
+            sigThreadStart = new ThreadStart(PlayCall);
+            sigThread = new Thread(sigThreadStart);
+            sigThread.Start();
         }
         private void UpdateBox(string text)
         {
@@ -196,6 +200,7 @@ namespace ClientApp
         }
         private void Listen()
         {
+            
             while (true)
             {
                 var data = new Byte[256];
@@ -204,10 +209,15 @@ namespace ClientApp
                 var bytes= stream.Read(data,0,data.Length);
                 responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
                 string[] words = responseData.Split(':');
-                if(words[0]=="CALL")
+                Console.WriteLine(responseData);
+                
+                if (words[0]=="CALL")
                 {
 
-                    playCall();
+                    sigThreadStart = new ThreadStart(PlayRing);
+                    sigThread = new Thread(sigThreadStart);
+                    sigThread.Start();
+                   
                     string message = words[2]+" wants to talk. Accept?";
                     string caption = "Incoming Call";
                     var result = MessageBox.Show(message, caption,
@@ -222,14 +232,15 @@ namespace ClientApp
                     }
                     else
                     {
-                        var msg = "CONN:" + words[2] + ":8001";
-
-                        
+                        var msg = "CONN:" + words[2] + ":11000";
+                        data = System.Text.Encoding.ASCII.GetBytes(msg);
+                        stream.Write(data, 0, data.Length);
 
                     }
                 }
                 else if(words[0]=="LIST")
                 {
+
                     var delUpdateBox = new delUpdateBox(UpdateList);
                     this.users.BeginInvoke(delUpdateBox, responseData);
                 }
@@ -357,6 +368,7 @@ namespace ClientApp
         private void callButton_Click(object sender, EventArgs e)
         {
             const string message ="Are you sure that you would like to call that user?";
+
             const string caption = "Calling";
             var result = MessageBox.Show(message, caption,
                                          MessageBoxButtons.YesNo,
@@ -371,7 +383,37 @@ namespace ClientApp
             else
             {
                 //var msg = "";
+                //CALL: Korzych: Dellor: 8001
+                String msg = "CALL:"+users.SelectedItem.ToString() +":"+ username  +  ":11000";
+                Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
+                stream.Write(data, 0, data.Length);
+                Console.WriteLine(msg);
+                sigThreadStart = new ThreadStart(PlayCall) ;
+                sigThread = new Thread(sigThreadStart);
+                sigThread.Start();
+                tcpListeningThread.Suspend();
+                var bytes = stream.Read(data, 0, data.Length);
+                try
+                {
+                    sigThread.Abort();
+                }
+                catch (Exception ex) { }
+               
+                var responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                string[] words = responseData.Split(':');
+                Console.WriteLine(responseData);
+                if(words[0]=="DENY")
+                {
+                    MessageBox.Show("Call Refused");
+                }
+                else if(words[0]=="CONN")
+                {
+                    String userAddress = words[2];
+                    int port = Convert.ToInt32(words[3]);
 
+                   // CONN: DELLOR: 127.0.0.1:2001
+                }
+                tcpListeningThread.Join();
             }
         }
         protected void BeginDataTransmission(NetworkStream stream)
@@ -449,38 +491,26 @@ namespace ClientApp
             client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
         }
         #endregion
-        private void playCall()
+       /* private void playCall()
         {
-            if (addressbox.Text.Length != 0 && addressbox.Text.Length <= 15)
-            {
-                if ((new Regex(@"^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")).IsMatch(addressbox.Text))
-                {
-                    addressbox.ForeColor = Color.Green;
-                    String temp = addressbox.Text;
-                    IPAddress ipaddress = IPAddress.Parse(temp);
-                    if (message.Text.Length == 0)
-                    {
-                        message.Text = "PING";
-                        client.sendMessage(ipaddress, "PING");
-                    };
-                    temp = message.Text;
-                    client.sendMessage(ipaddress, temp);
-                    sigThreadStart = new ThreadStart(PlayCall);
-                    sigThread = new Thread(sigThreadStart);
-                    sigThread.Start();
+            //if (addressbox.Text.Length != 0 && addressbox.Text.Length <= 15)
+            //{
+            //    if ((new Regex(@"^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")).IsMatch(addressbox.Text))
+            //    {
+            //        addressbox.ForeColor = Color.Green;
+            //        String temp = addressbox.Text;
+            //        IPAddress ipaddress = IPAddress.Parse(temp);
+            //        if (message.Text.Length == 0)
+            //        {
+            //            message.Text = "PING";
+            //            client.sendMessage(ipaddress, "PING");
+            //        };
+            //        temp = message.Text;
+          //          client.sendMessage(ipaddress, temp);
+                    
 
-                }
-                else
-                {
-                    addressbox.ForeColor = Color.Red;
-                    MessageBox.Show("Invalid address");
-                }
-            }
-            else
-            {
-                MessageBox.Show("Invalid address");
-            }
-        }
+              
+        }*/
        
         private void enableCall()
         {

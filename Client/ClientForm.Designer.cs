@@ -189,7 +189,6 @@
             // 
             // callButton
             // 
-            this.callButton.Enabled = false;
             this.callButton.Location = new System.Drawing.Point(311, 262);
             this.callButton.Name = "callButton";
             this.callButton.Size = new System.Drawing.Size(141, 27);

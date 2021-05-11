@@ -46,8 +46,7 @@ namespace ClientApp
                         tcpClient = new TcpClient(temp, 8001);
                         msg = "HELL:" + getIPAddress() + ":8001:" + userBox.Text;
                         Console.WriteLine(msg);
-                
-
+      
                         Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
                         try
                         {
@@ -68,9 +67,9 @@ namespace ClientApp
                                 msg = "OKAY:" + words[1];
                                 data = System.Text.Encoding.ASCII.GetBytes(msg);
                                 stream.Write(data, 0, data.Length);
-                                clientForm = new ClientForm(Int32.Parse(words[1]), temp, userBox.Text);
-                                stream.Close();
-                                tcpClient.Close();
+                                clientForm = new ClientForm(Int32.Parse(words[1]), temp, userBox.Text,tcpClient);
+                                //stream.Close();
+                                //tcpClient.Close();
                                 clientForm.Show();
                                 this.Hide();
 
