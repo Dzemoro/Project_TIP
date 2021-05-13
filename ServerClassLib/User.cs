@@ -22,6 +22,7 @@ namespace ServerClassLib
             get => name;
             set => name = value;
         }
+
         public string IPAddress
         {
             get => ipAddress;
