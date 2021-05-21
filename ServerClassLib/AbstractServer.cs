@@ -27,11 +27,11 @@ namespace ServerClassLib
             get => port; set
             {
                 int tmp = port;
-                if (!running) port = value; else throw new Exception("nie można zmienić portu kiedy serwer jest uruchomiony");
+                if (!running) port = value; else throw new Exception("The port cannot be changed while the server is running");
                 if (!checkPort())
                 {
                     port = tmp;
-                    throw new Exception("błędna wartość portu");
+                    throw new Exception("Wrong port value");
                 }
             }
         }
@@ -39,8 +39,8 @@ namespace ServerClassLib
         {
             get => buffer_size; set
             {
-                if (value < 0 || value > 1024 * 1024 * 64) throw new Exception("błędny rozmiar pakietu");
-                if (!running) buffer_size = value; else throw new Exception("nie można zmienić rozmiaru pakietu kiedy serwer jest uruchomiony");
+                if (value < 0 || value > 1024 * 1024 * 64) throw new Exception("Wrong packet size");
+                if (!running) buffer_size = value; else throw new Exception("The packet size cannot be changed while the server is running");
             }
         }
         protected TcpListener TcpListener { get => tcpListener; set => tcpListener = value; }

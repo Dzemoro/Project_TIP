@@ -45,5 +45,31 @@ namespace ServerClassLib
                     throw new Exception();
             }
         }
+
+        public static UserStatus UserStatusFromString(string status)
+        {
+            switch (status)
+            {
+                case "Available":
+                    return UserStatus.Available;
+                case "Busy":
+                    return UserStatus.Busy;
+                default:
+                    throw new ArgumentException("Status should be Available or Busy");
+            }
+        }
+
+        public static string UserStatusToString(UserStatus status)
+        {
+            switch (status)
+            {
+                case UserStatus.Available:
+                    return "Available";
+                case UserStatus.Busy:
+                    return "Busy";
+                default:
+                    throw new Exception();
+            }
+        }
     }
 }

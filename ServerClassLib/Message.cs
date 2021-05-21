@@ -66,7 +66,7 @@ namespace ServerClassLib
             {
                 if (u.Name == name)
                 {
-                    return u.IPAddress;
+                    return u.IpAddress;
                 }
             }
             return null;
