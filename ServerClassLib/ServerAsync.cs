@@ -40,10 +40,8 @@ namespace ServerClassLib
             byte[] buffer = new byte[1024];
             string portResponse = "PORT:";
             string decline = "NACK";
-            string calling = "CALL:";
-            string confirm = "CONN:";
+
             int listCounter = 0;
-            string callName = "";
             User u = new User();
             Message msg;
 
@@ -73,7 +71,9 @@ namespace ServerClassLib
                             byte[] portResponseByte = new ASCIIEncoding().GetBytes(portResponse);
                             stream.Write(portResponseByte, 0, portResponseByte.Length);
                             portResponse = "PORT:";
-                            SendList(stream);
+                            //SendList(stream);
+                            msg = new Message(null, MessageType.LIST);
+                            msg.SendLIST(stream, users);
                         }
                     }
                     else if (data[0] == "CALL")
@@ -85,7 +85,7 @@ namespace ServerClassLib
                         }
                         else
                         {
-                            msg = new Message(data.Skip(1).ToArray(), MessageType.CALL);
+                            msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
                             messages.Add(msg);
                         }
                     }
@@ -98,8 +98,34 @@ namespace ServerClassLib
                         }
                         else
                         {
-                            msg = new Message(data.Skip(1).ToArray(), MessageType.CONN);
+                            msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
                             messages.Add(msg);
+                        }
+                    }
+                    else if (data[0] == "DENY")
+                    {
+                        if (data.Length < 3)
+                        {
+                            Console.WriteLine("Invalid data: DENY");
+                            stream.Write(declineByte, 0, declineByte.Length);
+                        }
+                        else
+                        {
+                            msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
+                            messages.Add(msg);
+                        }
+                    }
+                    else if(data[0] == "LIST")
+                    {
+                        if (data.Length < 2)
+                        {
+                            Console.WriteLine("Invalid data: LIST");
+                            stream.Write(declineByte, 0, declineByte.Length);
+                        }
+                        else
+                        {
+                            msg = new Message(null, EnumCaster.MessageTypeFromString(data[0]));
+                            msg.SendLIST(stream, users);
                         }
                     }
                 }
@@ -115,10 +141,7 @@ namespace ServerClassLib
                 {
                     //CALL:KEY:VALUE
                     Message temp = calls.First();
-                    var usernamesWithPort = temp.Informations;
-                    calling += usernamesWithPort[0] + ":" + usernamesWithPort[1] + ":" + GetUserIPAddress(usernamesWithPort[1]) + ":" + usernamesWithPort[2];
-                    byte[] callingByte = new ASCIIEncoding().GetBytes(calling);
-                    stream.Write(callingByte, 0, callingByte.Length);
+                    temp.SendCALL(stream, users);
                     messages.Remove(temp);
                 }
                 var conns = messages.Where(x => x.MessageType == MessageType.CONN && x.Informations[0] == u.Name);
@@ -126,13 +149,17 @@ namespace ServerClassLib
                 {
                     //CONN:NAME:IP:PORT
                     Message temp = conns.First();
-                    var usernameWithPort = temp.Informations;
-                    confirm += usernameWithPort[0] + ":" + GetUserIPAddress(usernameWithPort[0]) + ":" + usernameWithPort[1];
-                    byte[] confirmByte = new ASCIIEncoding().GetBytes(confirm);
-                    stream.Write(confirmByte, 0, confirmByte.Length);
+                    temp.SendCONN(stream, users);
                     messages.Remove(temp);
                 }
-
+                var denys = messages.Where(x => x.MessageType == MessageType.DENY && x.Informations[0] == u.Name);
+                if (denys.Count() != 0)
+                {
+                    //DENY:NAME_TO:NAME_FROM
+                    Message temp = denys.First();
+                    temp.SendDENY(stream);
+                    messages.Remove(temp);
+                }
             }
         }
         static int FreeTcpPort()
@@ -186,6 +213,7 @@ namespace ServerClassLib
                 return temp;
             }
         }
+        //Temporary Function
         private void SendList(NetworkStream stream)
         {
             string listResponse = "LIST";
@@ -195,9 +223,8 @@ namespace ServerClassLib
             }
             byte[] listResponseByte = new ASCIIEncoding().GetBytes(listResponse);
             stream.Write(listResponseByte, 0, listResponseByte.Length);
-            listResponse = "LIST";
         }
-        private string GetUserIPAddress(string name)
+        public string GetUserIPAddress(string name)
         {
             foreach(User u in users)
             {
