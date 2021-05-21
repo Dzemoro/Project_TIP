@@ -19,14 +19,14 @@ namespace ClientClassLib
            // IPAddress address = IPAddress.Parse("127.0.0.1");
            
             byte[] sendbuf = Encoding.ASCII.GetBytes(msg);
-            IPEndPoint ep = new IPEndPoint(address, 8001);
+            IPEndPoint ep = new IPEndPoint(address, 0);
             s.SendTo(sendbuf, ep);
             Console.WriteLine("Message sent to the address");
         }
         public void sendBytes(IPAddress address, byte[] bytes)
         {
             Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);   
-            IPEndPoint ep = new IPEndPoint(address, 8001);
+            IPEndPoint ep = new IPEndPoint(address, 0);
             s.SendTo(bytes, ep);
            
         }

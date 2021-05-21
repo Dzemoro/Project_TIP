@@ -9,7 +9,7 @@ using System.Text;
 
 namespace ClientApp
 {
-    static class GuiClient
+   public static class GuiClient
     {
         /// <summary>
         /// Główny punkt wejścia dla aplikacji.
@@ -23,6 +23,11 @@ namespace ClientApp
             Application.Run(new ConnectionPanel());
             
 
+        }
+        [STAThread]
+        public static void RunPanel(SessionForm form)
+        {
+            form.ShowDialog();
         }
     }
 }

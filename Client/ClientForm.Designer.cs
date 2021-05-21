@@ -28,12 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.send_button = new System.Windows.Forms.Button();
             this.message = new System.Windows.Forms.TextBox();
             this.addressbox = new System.Windows.Forms.TextBox();
             this.messageLbl = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.audioPanel = new System.Windows.Forms.Panel();
             this.audioSList = new System.Windows.Forms.ListView();
@@ -47,17 +45,6 @@
             this.audioPanel.SuspendLayout();
             this.micGroup.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // send_button
-            // 
-            this.send_button.Enabled = false;
-            this.send_button.Location = new System.Drawing.Point(686, 155);
-            this.send_button.Name = "send_button";
-            this.send_button.Size = new System.Drawing.Size(75, 23);
-            this.send_button.TabIndex = 0;
-            this.send_button.Text = "Send";
-            this.send_button.UseVisualStyleBackColor = true;
-            this.send_button.Click += new System.EventHandler(this.SendButton_Click);
             // 
             // message
             // 
@@ -98,16 +85,6 @@
             this.label1.Size = new System.Drawing.Size(58, 13);
             this.label1.TabIndex = 4;
             this.label1.Text = "IP Address";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Enabled = false;
-            this.label2.Location = new System.Drawing.Point(528, 128);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(53, 13);
-            this.label2.TabIndex = 5;
-            this.label2.Text = "Received";
             // 
             // label3
             // 
@@ -212,12 +189,10 @@
             this.Controls.Add(this.users);
             this.Controls.Add(this.micGroup);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.messageLbl);
             this.Controls.Add(this.addressbox);
             this.Controls.Add(this.message);
-            this.Controls.Add(this.send_button);
             this.Name = "ClientForm";
             this.Text = "Connection Maganger";
             this.Load += new System.EventHandler(this.ClientForm_Load);
@@ -229,13 +204,10 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.Button send_button;
         private System.Windows.Forms.TextBox message;
         private System.Windows.Forms.TextBox addressbox;
         private System.Windows.Forms.Label messageLbl;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Panel audioPanel;
         private System.Windows.Forms.ListView audioSList;

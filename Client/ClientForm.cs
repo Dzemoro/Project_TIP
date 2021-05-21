@@ -81,12 +81,7 @@ namespace ClientApp
            // audioThread.Start();
         }
         #region Interface_Handling     
-        private void SendButton_Click(object sender, EventArgs e)
-        {
-            sigThreadStart = new ThreadStart(PlayCall);
-            sigThread = new Thread(sigThreadStart);
-            sigThread.Start();
-        }
+       
         private void UpdateBox(string text)
         {
             this.label3.Text = text;
@@ -242,8 +237,10 @@ namespace ClientApp
                         var udpAddress = words[3];
                         var udpPort = 11000;
                         var listenport = 11000;
+
                         SessionForm sessionForm = new SessionForm(udpPort,nickname,udpAddress, listenport);
-                        sessionForm.Show();
+                        GuiClient.RunPanel(sessionForm);
+                       
 
                     }
                 }
@@ -255,24 +252,22 @@ namespace ClientApp
                 }
                 else if (words[0] == "CONN")
                 {
-                    //CONN:DELLOR:127.0.0.1:2001- Connect - Serwer->Dellor
-                    //var delUpdateBox = new delUpdateBox(UpdateList);
-
-                    //this.users.BeginInvoke(delUpdateBox, responseData);
+                  
                     var nickname = words[1];
                     var udpAddress = words[2];
                     var udpPort = 11000;
                     var listenport = 11000;
                     singalSound.Stop();
-                    SessionForm sessionForm = new SessionForm(udpPort, nickname, udpAddress,listenport);
-                    sessionForm.Show();
+                    simpleSound.Stop();
+                    
+                    SessionForm sessionForm = new SessionForm(udpPort, nickname, udpAddress, listenport);
+                    GuiClient.RunPanel(sessionForm);
 
                 }
                 else if (words[0] == "DENY")
                 {
                     MessageBox.Show("User Rejected Your Call");
-                    //var delUpdateBox = new delUpdateBox(UpdateList);
-                    //this.users.BeginInvoke(delUpdateBox, responseData);
+                  
                 }
 
 
@@ -288,7 +283,7 @@ namespace ClientApp
         {
             int listenPort = 11000;
             UdpClient listener = new UdpClient(listenPort);
-            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
+            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, 0);
             try
             {
                 while (true)
@@ -311,7 +306,7 @@ namespace ClientApp
         /// Method used to start UDP listener to receive data on designated port. 
         /// </summary>
         private void StartUdpListener()
-        {
+        {//DO SESJI
             int listenPort = 11110;
             UdpClient listener = new UdpClient(listenPort);
             IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
@@ -425,6 +420,9 @@ namespace ClientApp
                */
             }
         }
+
+        
+
         protected void BeginDataTransmission(NetworkStream stream)
         {
             byte[] buffer = new byte[1024];
@@ -467,18 +465,8 @@ namespace ClientApp
         /// </summary>
         private void PlayCall()
         {
-            int i = 0;
-            
-            while (i<3)
-               {
                     singalSound = new SoundPlayer(@"C:\Users\Krzysiek\Desktop\Sounds\internal.wav");
                     singalSound.Play();
-                    Thread.Sleep(11500);
-                    i += 1;
-               }
-            
-                  
-
         }
         /// <summary>
         /// Method to play ring sound
