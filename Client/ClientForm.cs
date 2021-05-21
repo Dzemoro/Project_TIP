@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Net.Sockets;
 using NAudio.Wave;
 using System.Media;
@@ -18,12 +19,18 @@ namespace ClientApp
     {
         public delegate void TransmissionDataDelegate(NetworkStream stream);
         Client client = new Client();
+        CancellationTokenSource listenerCancellationToken = new CancellationTokenSource();
+        CancellationTokenSource playerCancellationToken = new CancellationTokenSource();
+        NetworkStream stream;
+        SoundPlayer simpleSound = new SoundPlayer();
+        SoundPlayer singalSound = new SoundPlayer();
+       //Task backgroundTask;
         public ClientForm()
         {
             InitializeComponent();
             this.client = new Client();
         }
-        public ClientForm(int port, string ipAddress, string username)
+        public ClientForm(int port, string ipAddress, string username,TcpClient tcpClient)
         {
             InitializeComponent();
             this.client = new Client();
@@ -32,18 +39,13 @@ namespace ClientApp
             this.username = username;
             try
             {
-                //(String address, name String) params= (ipAddress, username);
-                //StartTCPListener(ipAddress, username);
-                //TEMP
-                //tcpClient = new TcpClient(ipAddress, 8001);
-              //  ParameterizedThreadStart parameterizedThreadStart = new ParameterizedThreadStart(StartTCPListener);
                 
-               // tcpListeningThread = new Thread();
-                tcpListeningThreadStart = new ThreadStart(StartTCPListener);
-                tcpListeningThread = new Thread(tcpListeningThreadStart);
-                tcpListeningThread.Start();
-                //listThread.Start();
-                //tcpClient = new TcpClient(ipAddress, port);
+                this.tcpClient = tcpClient;
+                stream = tcpClient.GetStream();
+             
+                StartTCPListener();
+                
+         
             }
             catch (SocketException se)
             {
@@ -79,10 +81,7 @@ namespace ClientApp
            // audioThread.Start();
         }
         #region Interface_Handling     
-        private void SendButton_Click(object sender, EventArgs e)
-        {
-            playCall();
-        }
+       
         private void UpdateBox(string text)
         {
             this.label3.Text = text;
@@ -126,35 +125,12 @@ namespace ClientApp
                 Console.WriteLine("Response:" + responseData);
                 this.users.BeginInvoke(delUpdateBox, responseData);
                 Thread.Sleep(5000);
-                /* String msg = "LIST:" + this.username;
-                 Console.WriteLine(msg);
-                 NetworkStream stream = tcpClient.GetStream();
-                 Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
-                 stream.Write(data, 0, data.Length);
-                 String responseData = String.Empty;
-                 //users.Items.Add("Perry the platypus");
-                 Int32 bytes = stream.Read(data, 0, data.Length);
-                 responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-                 Console.WriteLine("Response:" + responseData);
-                 string[] words = responseData.Split(':');
-                 //Fill userlist
-                 users.Items.Clear();
-                 for (int i = 1; i < words.Length; i++)
-                 {
-                     //Check for current user
-                     if (!words[i].Equals(username))
-                     {
-                         users.Items.Add(words[i]);
-                     }
-
-                 }
-                 Thread.Sleep(5000);
-                */
+        
             }
 
 
         }
-        private void UpdateList()
+        private void UpdateThisList()
         {
             var delUpdateBox = new delUpdateBox(UpdateList);
             var data = new Byte[512];
@@ -215,7 +191,89 @@ namespace ClientApp
             }
 
         }
-       
+        public void Listen()
+        {
+            
+            while (true)
+            {
+                var data = new Byte[256];
+                String responseData = String.Empty;
+
+                var bytes= stream.Read(data,0,data.Length);
+                responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                string[] words = responseData.Split(':');
+                Console.WriteLine(responseData);
+                
+                if (words[0]=="CALL")
+                {
+
+                    sigThreadStart = new ThreadStart(PlayRing);
+                    sigThread = new Thread(sigThreadStart);
+                    sigThread.Start();
+                   
+                    string message = words[2]+" wants to talk. Do you want to accept?";
+                    string caption = "Incoming Call";
+                    var result = MessageBox.Show(message, caption,
+                                                 MessageBoxButtons.YesNo,
+                                                 MessageBoxIcon.Question);
+
+                    // If the no button was pressed ...
+                    if (result == DialogResult.No)
+                    {
+                        simpleSound.Stop();
+
+                        // cancel the closure of the form.
+                        var msg = "DENY:"+words[2];
+                    }
+                    else
+                    {
+                        //CALL:Korzych:Dellor:127.0.0.1:8001
+                        simpleSound.Stop();
+                        var msg = "CONN:" + words[2] + ":11000";
+                        data = System.Text.Encoding.ASCII.GetBytes(msg);
+                        stream.Write(data, 0, data.Length);
+                        
+                        var nickname = words[2];
+                        var udpAddress = words[3];
+                        var udpPort = 11000;
+                        var listenport = 11000;
+
+                        SessionForm sessionForm = new SessionForm(udpPort,nickname,udpAddress, listenport);
+                        GuiClient.RunPanel(sessionForm);
+                       
+
+                    }
+                }
+                else if(words[0]=="LIST")
+                {
+
+                    var delUpdateBox = new delUpdateBox(UpdateList);
+                    this.users.BeginInvoke(delUpdateBox, responseData);
+                }
+                else if (words[0] == "CONN")
+                {
+                  
+                    var nickname = words[1];
+                    var udpAddress = words[2];
+                    var udpPort = 11000;
+                    var listenport = 11000;
+                    singalSound.Stop();
+                    simpleSound.Stop();
+                    
+                    SessionForm sessionForm = new SessionForm(udpPort, nickname, udpAddress, listenport);
+                    GuiClient.RunPanel(sessionForm);
+
+                }
+                else if (words[0] == "DENY")
+                {
+                    MessageBox.Show("User Rejected Your Call");
+                  
+                }
+
+
+            }
+        }
+
         #endregion
         #region Packet_Handling
         /// <summary>
@@ -225,7 +283,7 @@ namespace ClientApp
         {
             int listenPort = 11000;
             UdpClient listener = new UdpClient(listenPort);
-            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
+            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, 0);
             try
             {
                 while (true)
@@ -248,7 +306,7 @@ namespace ClientApp
         /// Method used to start UDP listener to receive data on designated port. 
         /// </summary>
         private void StartUdpListener()
-        {
+        {//DO SESJI
             int listenPort = 11110;
             UdpClient listener = new UdpClient(listenPort);
             IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
@@ -272,18 +330,7 @@ namespace ClientApp
         }
         private void StartTCPListener()
         {
-            TcpListener tcpListener =  new TcpListener(System.Net.IPAddress.Any, 11100);
-            tcpListener.Start();
-            
-            while(true)
-            {
-                var client = tcpListener.AcceptTcpClient();
-                var Stream = client.GetStream();
-                BeginDataTransmission(Stream);
-                //transmissionDelegate.BeginInvoke(Stream, TransmissionCallback, tcpClient);
-                
-            }
-
+            var task = Task.Run(() => Listen(),listenerCancellationToken.Token); //listenerCancellationToken.Token);
         }
         private void TransmissionCallback(IAsyncResult ar)
         {
@@ -323,7 +370,8 @@ namespace ClientApp
 
         private void callButton_Click(object sender, EventArgs e)
         {
-            const string message ="Are you sure that you would like to call?";
+            const string message ="Are you sure that you would like to call that user?";
+
             const string caption = "Calling";
             var result = MessageBox.Show(message, caption,
                                          MessageBoxButtons.YesNo,
@@ -332,21 +380,55 @@ namespace ClientApp
             // If the no button was pressed ...
             if (result == DialogResult.No)
             {
-                // cancel the closure of the form.
-
+                
             }
             else
             {
+                
+                String msg = "CALL:"+users.SelectedItem.ToString() +":"+ username  +  ":11000";
+                Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
+                stream.Write(data, 0, data.Length);
+                Console.WriteLine(msg);
+                var task = Task.Run(PlayCall, playerCancellationToken.Token);
+                
+                /*
+                //sigThreadStart = new ThreadStart(PlayCall) ;
+                //sigThread = new Thread(sigThreadStart);
+                //sigThread.Start();
 
+                //listenerCancellationToken.Cancel();
+                //var bytes = stream.Read(data, 0, data.Length);
+                
+                var responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                simpleSound.Stop();
+                
+               
+               
+                string[] words = responseData.Split(':');
+                Console.WriteLine(responseData);
+                if(words[0]=="DENY")
+                {
+                    MessageBox.Show("Call Refused");
+                }
+                else if(words[0]=="CONN")
+                {
+                    String userAddress = words[2];
+                    int port = Convert.ToInt32(words[3]);
+
+                   // CONN: DELLOR: 127.0.0.1:2001
+                }
+               */
             }
         }
+
+        
+
         protected void BeginDataTransmission(NetworkStream stream)
         {
             byte[] buffer = new byte[1024];
             string callResponse = "CALL:";
             string list = "LIST";
             string decline = "NACK";
-
             byte[] declineByte = new ASCIIEncoding().GetBytes(decline);
 
             while (true)
@@ -383,26 +465,15 @@ namespace ClientApp
         /// </summary>
         private void PlayCall()
         {
-            int i = 0;
-            SoundPlayer simpleSound;
-            while (i<3)
-               {
-                    simpleSound = new SoundPlayer(@"C:\Users\Krzysiek\Desktop\Sounds\internal.wav");
-                    simpleSound.Play();
-                    Thread.Sleep(11500);
-                    i += 1;
-               }
-            
-                  
-
+                    singalSound = new SoundPlayer(@"C:\Users\Krzysiek\Desktop\Sounds\internal.wav");
+                    singalSound.Play();
         }
         /// <summary>
         /// Method to play ring sound
         /// </summary>
         private void PlayRing()
         {
-            SoundPlayer simpleSound;
-
+  
             simpleSound = new SoundPlayer(@"C:\Users\Krzysiek\Desktop\Sounds\call_ring.wav");
             simpleSound.Play();
         }
@@ -410,43 +481,13 @@ namespace ClientApp
         {
             throw new NotImplementedException();
         }
+      //DO ZMIANY
         private void RecorderOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
         {
             client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
         }
         #endregion
-        private void playCall()
-        {
-            if (addressbox.Text.Length != 0 && addressbox.Text.Length <= 15)
-            {
-                if ((new Regex(@"^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")).IsMatch(addressbox.Text))
-                {
-                    addressbox.ForeColor = Color.Green;
-                    String temp = addressbox.Text;
-                    IPAddress ipaddress = IPAddress.Parse(temp);
-                    if (message.Text.Length == 0)
-                    {
-                        message.Text = "PING";
-                        client.sendMessage(ipaddress, "PING");
-                    };
-                    temp = message.Text;
-                    client.sendMessage(ipaddress, temp);
-                    sigThreadStart = new ThreadStart(PlayCall);
-                    sigThread = new Thread(sigThreadStart);
-                    sigThread.Start();
-
-                }
-                else
-                {
-                    addressbox.ForeColor = Color.Red;
-                    MessageBox.Show("Invalid address");
-                }
-            }
-            else
-            {
-                MessageBox.Show("Invalid address");
-            }
-        }
+       
        
         private void enableCall()
         {
@@ -464,5 +505,6 @@ namespace ClientApp
             return address[4];
 
         }
+        
     }
 }

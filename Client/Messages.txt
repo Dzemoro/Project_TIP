@@ -10,8 +10,7 @@
 		CALL -  akceptowanie połączenia+ port na którym będzie nasłuchiwał UDP
 	Serwer forwarduje wiadomości jednak zapamiętuje porty
 	Żeby się nie pomieszało to można zrobić jakiś kontener z trwającymi sesjami
-	
-	
+		
 5. GADU GADU GADU po UDP
 6. 1 użytkownik naciska rozłącz i wysyła komunikat TCP np END
 	Serwer odbiera komunikat i wysyłą TCP END do drugiego użytkownika
@@ -23,9 +22,22 @@ OPCJONALNIE (Dodatkowo np ping- żeby sprawdzać czy jesteś w sieci, no i możn
 KOMUNIKATY:
 DENY- Deny odrzuć połączenie
 HELL- HELLO próba połączenia z serwerem TCP
-CONN- Connect - akceptacja połączenia
-CALL- Korzych-Dellor - Dzwoni Dellor do Korzych
-DENY- Dellor - Ktoś odrzuca Dellor
+
+CALL:Korzych:Dellor:8001 - Delor->Serwer
+CALL:Korzych:Dellor:127.0.0.1:8001 - Serwer->Korzych	
+CONN:DELLOR:2001- Connect - Krzychol->Serwer
+CONN:DELLOR:127.0.0.1:2001- Connect - Serwer->Dellor
+
+
+
+DENY:Dellor - Ktoś odrzuca Dellor
+
+
+
+
+
+DENY:Dellor - Ktoś odrzuca Dellor
+
 HELL:127.0.0.1:11110:USERNAME
 PORT:8001
 OKAY:8001
