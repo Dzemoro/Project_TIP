@@ -84,7 +84,7 @@ namespace ClientApp
        
         private void UpdateBox(string text)
         {
-            this.label3.Text = text;
+            //this.label3.Text = text;
         }
         private void UpdateList(string text)
         {
@@ -142,55 +142,10 @@ namespace ClientApp
             Console.WriteLine("Response:" + responseData);
             this.users.BeginInvoke(delUpdateBox, responseData);
         }
-        private void Refresh_Click(object sender, EventArgs e) 
-        {
-            List<WaveInCapabilities> audioSources = new List<WaveInCapabilities>();
-            for(int i=0;i< WaveIn.DeviceCount;i++)
-            {
-                audioSources.Add(WaveIn.GetCapabilities(i));
-            }
-            audioSList.Items.Clear();
-            foreach(var source in audioSources)
-            {
-                ListViewItem device = new ListViewItem(source.ProductName);
-                device.SubItems.Add(new ListViewItem.ListViewSubItem(device, source.Channels.ToString()));
-                audioSList.Items.Add(device);
-            }
-        }  
-        private void StartSbutton_Click(object sender, EventArgs e) 
-        {
-            if(recording==false)
-            {
-                if (audioSList.SelectedItems.Count == 0) return;
-                recording = true;
-                int deviceNumber = audioSList.SelectedItems[0].Index;
-                inputRec = new WaveIn
-                {
-                    WaveFormat = new WaveFormat(44100, WaveIn.GetCapabilities(deviceNumber).Channels)
-                };
-                inputRec.DataAvailable += RecorderOnDataAvailable;
-                outputWaveProvider = new BufferedWaveProvider(inputRec.WaveFormat);
+       
+      
 
-                player = new WaveOut
-                {
-                    DeviceNumber = 0
-                };
-                player.Init(outputWaveProvider);
-                player.Play();
-                inputRec.StartRecording(); 
-            }
-
-            else
-            {
-                inputRec.StopRecording();
-                player.Stop();
-                player.Dispose();
-                inputRec.Dispose();
-                outputWaveProvider.ClearBuffer();
-                recording = false;
-            }
-
-        }
+        
         public void Listen()
         {
             
@@ -206,11 +161,8 @@ namespace ClientApp
                 
                 if (words[0]=="CALL")
                 {
+                    //CALL:Korzych:Dellor:127.0.0.1:8001 - Serwer->Korzych	
 
-                    sigThreadStart = new ThreadStart(PlayRing);
-                    sigThread = new Thread(sigThreadStart);
-                    sigThread.Start();
-                   
                     string message = words[2]+" wants to talk. Do you want to accept?";
                     string caption = "Incoming Call";
                     var result = MessageBox.Show(message, caption,
@@ -224,19 +176,21 @@ namespace ClientApp
 
                         // cancel the closure of the form.
                         var msg = "DENY:"+words[2];
+                        data = System.Text.Encoding.ASCII.GetBytes(msg);
+                        stream.Write(data, 0, data.Length);
                     }
                     else
                     {
                         //CALL:Korzych:Dellor:127.0.0.1:8001
                         simpleSound.Stop();
-                        var msg = "CONN:" + words[2] + ":11000";
-                        data = System.Text.Encoding.ASCII.GetBytes(msg);
-                        stream.Write(data, 0, data.Length);
-                        
+                        var listenport = FreePort();
+                        var udpPort = Int32.Parse(words[4]);
                         var nickname = words[2];
                         var udpAddress = words[3];
-                        var udpPort = 11000;
-                        var listenport = 11000;
+                        //UdpClient listener = new UdpClient(0)
+                        var msg = "CONN:" + words[2] + ":"+listenport.ToString();
+                        data = System.Text.Encoding.ASCII.GetBytes(msg);
+                        stream.Write(data, 0, data.Length);
 
                         SessionForm sessionForm = new SessionForm(udpPort,nickname,udpAddress, listenport);
                         GuiClient.RunPanel(sessionForm);
@@ -252,11 +206,12 @@ namespace ClientApp
                 }
                 else if (words[0] == "CONN")
                 {
-                  
+                    //CONN:DELLOR:127.0.0.1:2001- Connect - Serwer->Dellor
+                    var listenport = FreePort();
                     var nickname = words[1];
                     var udpAddress = words[2];
-                    var udpPort = 11000;
-                    var listenport = 11000;
+                    var udpPort = Int32.Parse(words[3]);
+               
                     singalSound.Stop();
                     simpleSound.Stop();
                     
@@ -316,7 +271,7 @@ namespace ClientApp
                 {
                     byte[] bytes = listener.Receive(ref groupEP);
                     delUpdateBox updateBox = new delUpdateBox(UpdateBox);
-                    this.label3.BeginInvoke(updateBox, $" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+                   // this.label3.BeginInvoke(updateBox, $" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
                 }
             }
             catch (SocketException e)
@@ -391,33 +346,7 @@ namespace ClientApp
                 Console.WriteLine(msg);
                 var task = Task.Run(PlayCall, playerCancellationToken.Token);
                 
-                /*
-                //sigThreadStart = new ThreadStart(PlayCall) ;
-                //sigThread = new Thread(sigThreadStart);
-                //sigThread.Start();
-
-                //listenerCancellationToken.Cancel();
-                //var bytes = stream.Read(data, 0, data.Length);
-                
-                var responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-                simpleSound.Stop();
-                
-               
-               
-                string[] words = responseData.Split(':');
-                Console.WriteLine(responseData);
-                if(words[0]=="DENY")
-                {
-                    MessageBox.Show("Call Refused");
-                }
-                else if(words[0]=="CONN")
-                {
-                    String userAddress = words[2];
-                    int port = Convert.ToInt32(words[3]);
-
-                   // CONN: DELLOR: 127.0.0.1:2001
-                }
-               */
+              
             }
         }
 
@@ -484,7 +413,7 @@ namespace ClientApp
       //DO ZMIANY
         private void RecorderOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
         {
-            client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
+           // client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
         }
         #endregion
        
@@ -505,6 +434,13 @@ namespace ClientApp
             return address[4];
 
         }
-        
+        static int FreePort()
+        {
+            
+            var udp = new UdpClient(0, AddressFamily.InterNetwork);
+            int port = ((IPEndPoint)udp.Client.LocalEndPoint).Port;
+            udp.Dispose();
+            return port;
+        }
     }
 }

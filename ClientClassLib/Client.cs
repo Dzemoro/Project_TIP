@@ -13,20 +13,20 @@ namespace ClientClassLib
     public class Client
     {
         public Client() { }
-        public void sendMessage(IPAddress address,String msg)
+        public void sendMessage(IPAddress address,String msg, int port)
         {
             Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
            // IPAddress address = IPAddress.Parse("127.0.0.1");
            
             byte[] sendbuf = Encoding.ASCII.GetBytes(msg);
-            IPEndPoint ep = new IPEndPoint(address, 0);
+            IPEndPoint ep = new IPEndPoint(address, port);
             s.SendTo(sendbuf, ep);
             Console.WriteLine("Message sent to the address");
         }
-        public void sendBytes(IPAddress address, byte[] bytes)
+        public void sendBytes(IPAddress address, byte[] bytes, int port)
         {
             Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);   
-            IPEndPoint ep = new IPEndPoint(address, 0);
+            IPEndPoint ep = new IPEndPoint(address, port);
             s.SendTo(bytes, ep);
            
         }

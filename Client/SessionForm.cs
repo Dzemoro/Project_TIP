@@ -20,7 +20,10 @@ namespace ClientApp
         string nickName,udpAddress;
         bool recording = false;
         Client client = new Client();
-        
+        bool first = true;
+        WaveIn inputRec;
+        BufferedWaveProvider outputWaveProvider= new BufferedWaveProvider(new WaveFormat(44100, WaveIn.GetCapabilities(0).Channels));
+        WaveOut player = new WaveOut();
         public SessionForm(int port, string nickname, string udpaddress, int listenport)
         {
             InitializeComponent();
@@ -34,11 +37,13 @@ namespace ClientApp
         }
         private void discButton_Click(object sender, EventArgs e)
         {
-
+            inputRec.StopRecording();
+            player.Stop();
+            player.Dispose();
+            inputRec.Dispose();
+            outputWaveProvider.ClearBuffer();
         }
-        WaveIn inputRec;
-        BufferedWaveProvider outputWaveProvider;
-        WaveOut player = new WaveOut();
+        
 
         public SessionForm()
         {
@@ -47,12 +52,12 @@ namespace ClientApp
 
         private void startSbutton_Click(object sender, EventArgs e)
         {
-            if (recording == false)
+            if(first)
             {
-                //Zmiana przycisku
+                
                 this.startSbutton.Text = "Mute";
                 if (audioSList.SelectedItems.Count == 0) return;
-                recording = true;
+                
                 int deviceNumber = audioSList.SelectedItems[0].Index;
                 inputRec = new WaveIn
                 {
@@ -60,13 +65,21 @@ namespace ClientApp
                 };
                 inputRec.DataAvailable += RecorderOnDataAvailable;
                 outputWaveProvider = new BufferedWaveProvider(inputRec.WaveFormat);
+                player.Init(outputWaveProvider);
+                player.Play();
 
                 player = new WaveOut
                 {
                     DeviceNumber = 0
                 };
-                player.Init(outputWaveProvider);
-                player.Play();
+                first = false;
+            }
+           
+
+            if (recording == false)
+            {
+                //Zmiana przycisku
+                recording = true;
                 inputRec.StartRecording();
             }
 
@@ -74,16 +87,13 @@ namespace ClientApp
             {
                 this.startSbutton.Text = "Unmute";
                 inputRec.StopRecording();
-                player.Stop();
-                player.Dispose();
-                inputRec.Dispose();
-                outputWaveProvider.ClearBuffer();
                 recording = false;
             }
         }
         private void RecorderOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
         {
-            client.sendBytes(IPAddress.Parse(udpAddress), waveInEventArgs.Buffer);
+            client.sendBytes(IPAddress.Parse(udpAddress), waveInEventArgs.Buffer,sendport);
+            outputWaveProvider.ClearBuffer();
         }
         private void refreshB_Click(object sender, EventArgs e)
         {
@@ -106,7 +116,7 @@ namespace ClientApp
         {
             
             
-            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, 0);
+            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
             UdpClient listener = new UdpClient(groupEP.Port);
             try
             {
