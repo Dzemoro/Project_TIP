@@ -93,7 +93,7 @@ namespace ClientApp
         private void RecorderOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
         {
             client.sendBytes(IPAddress.Parse(udpAddress), waveInEventArgs.Buffer,sendport);
-            outputWaveProvider.ClearBuffer();
+            
         }
         private void refreshB_Click(object sender, EventArgs e)
         {

@@ -24,6 +24,7 @@ namespace ClientApp
         NetworkStream stream;
         SoundPlayer simpleSound = new SoundPlayer();
         SoundPlayer singalSound = new SoundPlayer();
+        int listenport;
        //Task backgroundTask;
         public ClientForm()
         {
@@ -37,6 +38,7 @@ namespace ClientApp
             this.port = port;
             this.ipAddress = ipAddress;
             this.username = username;
+            this.listenport = 0;
             try
             {
                 
@@ -183,7 +185,7 @@ namespace ClientApp
                     {
                         //CALL:Korzych:Dellor:127.0.0.1:8001
                         simpleSound.Stop();
-                        var listenport = FreePort();
+                        listenport = FreePort();
                         var udpPort = Int32.Parse(words[4]);
                         var nickname = words[2];
                         var udpAddress = words[3];
@@ -207,7 +209,7 @@ namespace ClientApp
                 else if (words[0] == "CONN")
                 {
                     //CONN:DELLOR:127.0.0.1:2001- Connect - Serwer->Dellor
-                    var listenport = FreePort();
+                    listenport = FreePort();
                     var nickname = words[1];
                     var udpAddress = words[2];
                     var udpPort = Int32.Parse(words[3]);
@@ -339,8 +341,9 @@ namespace ClientApp
             }
             else
             {
-                
-                String msg = "CALL:"+users.SelectedItem.ToString() +":"+ username  +  ":11000";
+                listenport = FreePort();
+
+                String msg = "CALL:"+users.SelectedItem.ToString() +":"+ username  +  ":"+listenport;
                 Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
                 stream.Write(data, 0, data.Length);
                 Console.WriteLine(msg);
