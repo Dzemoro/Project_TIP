@@ -343,7 +343,7 @@ namespace ClientApp
             {
                 listenport = FreePort();
 
-                String msg = "CALL:"+users.SelectedItem.ToString() +":"+ username  +  ":"+listenport;
+                String msg = "CALL:"+users.SelectedItem.ToString() +":"+ username  +  ":"+listenport.ToString();
                 Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
                 stream.Write(data, 0, data.Length);
                 Console.WriteLine(msg);
