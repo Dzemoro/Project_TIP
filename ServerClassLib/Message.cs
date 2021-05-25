@@ -14,7 +14,8 @@ namespace ServerClassLib
         CALL,
         DENY,
         CONN,
-        LIST
+        LIST,
+        HANG
     }
     public class Message
     {

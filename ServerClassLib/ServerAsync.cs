@@ -134,6 +134,42 @@ namespace ServerClassLib
                             msg.SendLIST(stream, users);
                         }
                     }
+                    else if (data[0] == "HANG")
+                    {
+                        if (data.Length < 2)
+                        {
+                            Console.WriteLine("Invalid data: HANG");
+                            stream.Write(declineByte, 0, declineByte.Length);
+                        }
+                        else
+                        {
+                            foreach(User user in users)
+                            {
+                                if(user.Name == data[1])
+                                {
+                                    user.Status = UserStatus.Available;
+                                }
+                            }
+                        }
+                    }
+                    else if (data[0] == "EXIT")
+                    {
+                        if (data.Length < 2)
+                        {
+                            Console.WriteLine("Invalid data: EXIT");
+                            stream.Write(declineByte, 0, declineByte.Length);
+                        }
+                        else
+                        {
+                            foreach(User user in users)
+                            {
+                                if(user.Name == data[1])
+                                {
+                                    users.Remove(user);
+                                }
+                            }
+                        }
+                    }
                 }
                 if (listCounter != users.Count && listCounter != 0)
                 {
