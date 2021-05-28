@@ -14,7 +14,8 @@ namespace ServerClassLib
         CALL,
         DENY,
         CONN,
-        LIST
+        LIST,
+        HANG
     }
     public class Message
     {
@@ -66,7 +67,7 @@ namespace ServerClassLib
             {
                 if (u.Name == name)
                 {
-                    return u.IPAddress;
+                    return u.IpAddress;
                 }
             }
             return null;

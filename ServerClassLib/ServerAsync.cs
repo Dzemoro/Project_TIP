@@ -42,8 +42,8 @@ namespace ServerClassLib
             string decline = "NACK";
 
             int listCounter = 0;
-            User u = new User();
             Message msg;
+            string name = "";
 
             byte[] declineByte = new ASCIIEncoding().GetBytes(decline);
 
@@ -61,17 +61,16 @@ namespace ServerClassLib
                         }
                         else
                         {
-                            u.Name = data[3];
-                            u.IPAddress = data[1];
+                            User u = new User(data[3], data[1], UserStatus.Available);
                             Console.WriteLine(u.Name + " connected");
                             users.Add(u);
+                            name = u.Name;
                             listCounter = users.Count;
                             int portNumber = FreeTcpPort();
                             portResponse += portNumber.ToString();
                             byte[] portResponseByte = new ASCIIEncoding().GetBytes(portResponse);
                             stream.Write(portResponseByte, 0, portResponseByte.Length);
                             portResponse = "PORT:";
-                            //SendList(stream);
                             msg = new Message(null, MessageType.LIST);
                             msg.SendLIST(stream, users);
                         }
@@ -98,6 +97,13 @@ namespace ServerClassLib
                         }
                         else
                         {
+                            foreach(User user in users)
+                            {
+                                if(user.Name == data[1] || user.Name == name)
+                                {
+                                    user.Status = UserStatus.Busy;
+                                }
+                            }
                             msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
                             messages.Add(msg);
                         }
@@ -128,15 +134,49 @@ namespace ServerClassLib
                             msg.SendLIST(stream, users);
                         }
                     }
+                    else if (data[0] == "HANG")
+                    {
+                        if (data.Length < 2)
+                        {
+                            Console.WriteLine("Invalid data: HANG");
+                            stream.Write(declineByte, 0, declineByte.Length);
+                        }
+                        else
+                        {
+                            foreach(User user in users)
+                            {
+                                if(user.Name == data[1])
+                                {
+                                    user.Status = UserStatus.Available;
+                                }
+                            }
+                        }
+                    }
+                    else if (data[0] == "EXIT")
+                    {
+                        if (data.Length < 2)
+                        {
+                            Console.WriteLine("Invalid data: EXIT");
+                            stream.Write(declineByte, 0, declineByte.Length);
+                        }
+                        else
+                        {
+                            foreach(User user in users)
+                            {
+                                if(user.Name == data[1])
+                                {
+                                    users.Remove(user);
+                                }
+                            }
+                        }
+                    }
                 }
                 if (listCounter != users.Count && listCounter != 0)
                 {
-                    Console.WriteLine("Wysylam do: " + u.Name);
                     SendList(stream);
-                    Console.WriteLine("Wyslalem");
                     listCounter = users.Count;
                 }
-                var calls = messages.Where(x => x.MessageType == MessageType.CALL && x.Informations[0] == u.Name);
+                var calls = messages.Where(x => x.MessageType == MessageType.CALL && x.Informations[0] == name);
                 if (calls.Count() != 0)
                 {
                     //CALL:KEY:VALUE
@@ -144,7 +184,7 @@ namespace ServerClassLib
                     temp.SendCALL(stream, users);
                     messages.Remove(temp);
                 }
-                var conns = messages.Where(x => x.MessageType == MessageType.CONN && x.Informations[0] == u.Name);
+                var conns = messages.Where(x => x.MessageType == MessageType.CONN && x.Informations[0] == name);
                 if (conns.Count() != 0)
                 {
                     //CONN:NAME:IP:PORT
@@ -152,7 +192,7 @@ namespace ServerClassLib
                     temp.SendCONN(stream, users);
                     messages.Remove(temp);
                 }
-                var denys = messages.Where(x => x.MessageType == MessageType.DENY && x.Informations[0] == u.Name);
+                var denys = messages.Where(x => x.MessageType == MessageType.DENY && x.Informations[0] == name);
                 if (denys.Count() != 0)
                 {
                     //DENY:NAME_TO:NAME_FROM
@@ -230,7 +270,7 @@ namespace ServerClassLib
             {
                 if(u.Name == name)
                 {
-                    return u.IPAddress;
+                    return u.IpAddress;
                 }
             }
             return null;

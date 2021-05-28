@@ -6,27 +6,22 @@ using System.Threading.Tasks;
 
 namespace ServerClassLib
 {
+    public enum UserStatus
+    {
+        Available,
+        Busy
+    }
     public class User
     {
-        string name;
-        string ipAddress;
+        public string Name { get; }
+        public string IpAddress { get; }
+        public UserStatus Status { get; set; }
 
-        public User()
+        public User(string name, string ipAddress, UserStatus status)
         {
-            this.name = "";
-            this.ipAddress = "";
-        }
-
-        public string Name
-        {
-            get => name;
-            set => name = value;
-        }
-
-        public string IPAddress
-        {
-            get => ipAddress;
-            set => ipAddress = value;
+            Name = name;
+            IpAddress = ipAddress;
+            Status = status;
         }
     }
 }
