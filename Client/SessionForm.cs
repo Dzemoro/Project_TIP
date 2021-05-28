@@ -29,7 +29,8 @@ namespace ClientApp
             InitializeComponent();
             this.sendport = port;
             this.nickName = nickname;
-            this.udpAddress = udpaddress;
+            // this.udpAddress = udpaddress;
+            this.udpAddress = "192.168.0.184";
             label1.Text = "Talking to: " + nickName;
             this.listenPort = listenport;
             var task = Task.Run(ReceiveTransmition);
@@ -114,8 +115,7 @@ namespace ClientApp
         
         private void ReceiveTransmition()
         {
-            
-            
+
             IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
             UdpClient listener = new UdpClient(groupEP.Port);
             try
