@@ -22,8 +22,10 @@ namespace ServerClassLib
                     return MessageType.CONN;
                 case "LIST":
                     return MessageType.LIST;
+                case "HANG":
+                    return MessageType.HANG;
                 default:
-                    throw new ArgumentException("Type should be one of HELL, CALL, DENY, CONN");
+                    throw new ArgumentException("Type should be one of HELL, CALL, DENY, CONN, LIST, HANG");
             }
         }
 
@@ -41,6 +43,8 @@ namespace ServerClassLib
                     return "CONN";
                 case MessageType.LIST:
                     return "LIST";
+                case MessageType.HANG:
+                    return "HANG";
                 default:
                     throw new Exception();
             }

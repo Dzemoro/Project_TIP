@@ -45,7 +45,6 @@
     <Compile Include="EnumCaster.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="ServerAsync.cs" />
-    <Compile Include="ServerUDP.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="User.cs" />
   </ItemGroup>
