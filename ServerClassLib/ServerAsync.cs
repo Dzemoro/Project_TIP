@@ -136,7 +136,7 @@ namespace ServerClassLib
                     }
                     else if (data[0] == "HANG")
                     {
-                        if (data.Length < 2)
+                        if (data.Length < 3)
                         {
                             Console.WriteLine("Invalid data: HANG");
                             stream.Write(declineByte, 0, declineByte.Length);
@@ -148,6 +148,8 @@ namespace ServerClassLib
                                 if(user.Name == data[1])
                                 {
                                     user.Status = UserStatus.Available;
+                                    msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
+                                    messages.Add(msg);
                                 }
                             }
                         }
@@ -199,6 +201,21 @@ namespace ServerClassLib
                     Message temp = denys.First();
                     temp.SendDENY(stream);
                     messages.Remove(temp);
+                }
+                var hangs = messages.Where(x => x.MessageType == MessageType.HANG && x.Informations[1] == name);
+                if (hangs.Count() != 0)
+                {
+                    //HANG:NAME_FROM:NAME_TO
+                    Message temp = hangs.First();
+                    temp.SendHANG(stream);
+                    messages.Remove(temp);
+                    foreach (User user in users)
+                    {
+                        if (user.Name == name)
+                        {
+                            user.Status = UserStatus.Available;
+                        }
+                    }
                 }
             }
         }

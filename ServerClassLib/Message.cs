@@ -56,9 +56,18 @@ namespace ServerClassLib
             string listResponse = EnumCaster.MessageTypeToString(MessageType);
             foreach (User u in users)
             {
-                listResponse += ":" + u.Name;
+                if(u.Status == UserStatus.Available)
+                {
+                    listResponse += ":" + u.Name;
+                }
             }
             Send(stream, listResponse);
+        }
+
+        public void SendHANG(NetworkStream stream)
+        {
+            string hang = EnumCaster.MessageTypeToString(MessageType);
+            Send(stream, hang);
         }
 
         public string GetUserIPAddress(string name, HashSet<User> users)
