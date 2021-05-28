@@ -11,38 +11,64 @@ using System.Threading.Tasks;
 using System.Net.Sockets;
 using NAudio.Wave;
 using System.Media;
-
+//CZY KLIENT ODBIERA
+//CZY DRUGI KLIENT WYSYŁA
 namespace ClientApp
 {
     public partial class SessionForm : Form
     {
         int sendport,listenPort;
+        CancellationTokenSource listenerCancellationToken = new CancellationTokenSource();
         string nickName,udpAddress;
         bool recording = false;
         Client client = new Client();
         bool first = true;
+        string username;
         WaveIn inputRec;
         BufferedWaveProvider outputWaveProvider= new BufferedWaveProvider(new WaveFormat(44100, WaveIn.GetCapabilities(0).Channels));
         WaveOut player = new WaveOut();
-        public SessionForm(int port, string nickname, string udpaddress, int listenport)
+        TcpClient tcpClient = new TcpClient();
+        NetworkStream stream;
+        public SessionForm(int port, string nickname, string udpaddress, int listenport, TcpClient tcpClient,string username)
         {
             InitializeComponent();
             this.sendport = port;
             this.nickName = nickname;
-            // this.udpAddress = udpaddress;
-            this.udpAddress = "192.168.0.184";
+            this.udpAddress = udpaddress;
+            //this.udpAddress = "192.168.0.184";
             label1.Text = "Talking to: " + nickName;
             this.listenPort = listenport;
+            this.username = username;
             var task = Task.Run(ReceiveTransmition);
+            StartTCPListener();
+            Console.WriteLine("Receiving at port:" + listenport);
+            try
+            {
+                this.tcpClient = tcpClient;
+                stream = tcpClient.GetStream();
+                //StartTCPListener();
+            }
+            catch (SocketException se)
+            {
+                MessageBox.Show("Connection Lost");
+                ConnectionPanel connectionPanel = new ConnectionPanel();
+                connectionPanel.Show();
+               // 
+                this.Close();
+            }
 
         }
         private void discButton_Click(object sender, EventArgs e)
         {
+            var msg = "HANG:"+username+":"+nickName;// "CONN:" + words[2] + ":" + listenport.ToString();
+            var data = System.Text.Encoding.ASCII.GetBytes(msg);
+            stream.Write(data, 0, data.Length);
             inputRec.StopRecording();
             player.Stop();
             player.Dispose();
             inputRec.Dispose();
             outputWaveProvider.ClearBuffer();
+            this.Close();
         }
         
 
@@ -51,11 +77,31 @@ namespace ClientApp
             InitializeComponent();
         }
 
+        public void Listen()
+        {
+
+            while (true)
+            {
+                var data = new Byte[256];
+                String responseData = String.Empty;
+
+                var bytes = stream.Read(data, 0, data.Length);
+                responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                Console.WriteLine(responseData);
+
+               if(responseData.Contains("HANG"))
+               {
+                    this.Invoke((MethodInvoker)delegate
+                    { 
+                        this.Close();
+                    });
+                }
+            }
+        }
         private void startSbutton_Click(object sender, EventArgs e)
         {
             if(first)
             {
-                
                 this.startSbutton.Text = "Mute";
                 if (audioSList.SelectedItems.Count == 0) return;
                 
@@ -81,6 +127,7 @@ namespace ClientApp
             {
                 //Zmiana przycisku
                 recording = true;
+                this.startSbutton.Text = "Mute";
                 inputRec.StartRecording();
             }
 
@@ -94,6 +141,7 @@ namespace ClientApp
         private void RecorderOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
         {
             client.sendBytes(IPAddress.Parse(udpAddress), waveInEventArgs.Buffer,sendport);
+            Console.WriteLine("Sending data");
             
         }
         private void refreshB_Click(object sender, EventArgs e)
@@ -123,7 +171,7 @@ namespace ClientApp
                 while (true)
                 {
                     byte[] bytes = listener.Receive(ref groupEP);
-                    //Console.WriteLine("Received Something");
+                    Console.WriteLine("Received Something");
                     outputWaveProvider.AddSamples(bytes, 0, bytes.Length);
                 }
             }
@@ -136,8 +184,10 @@ namespace ClientApp
                 listener.Close();
             }
         }
-
-
+        private void StartTCPListener()
+        {
+            var task = Task.Run(() => Listen(), listenerCancellationToken.Token); 
+        }
     }
    
 

@@ -17,12 +17,9 @@ namespace ClientApp
         [STAThread]
         static void Main(string[] args)
         {
-
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new ConnectionPanel());
-            
-
         }
         [STAThread]
         public static void RunPanel(SessionForm form)

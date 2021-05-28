@@ -32,10 +32,6 @@ CONN:DELLOR:127.0.0.1:2001- Connect - Serwer->Dellor
 
 DENY:Dellor - Ktoś odrzuca Dellor
 
-
-
-
-
 DENY:Dellor - Ktoś odrzuca Dellor
 
 HELL:127.0.0.1:11110:USERNAME

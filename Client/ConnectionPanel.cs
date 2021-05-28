@@ -50,8 +50,11 @@ namespace ClientApp
                         Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
                         try
                         {
+                            ///////
                             NetworkStream stream = tcpClient.GetStream();
-       
+                           // var myAddress = IPAddress.Any.ToString();
+
+                            ///////
                             stream.Write(data, 0, data.Length);
                             Console.WriteLine("Sent: {0}", msg);
                             //ODPOWIEDŹ
@@ -144,7 +147,17 @@ namespace ClientApp
             strHostName = Dns.GetHostName();
             IPHostEntry ipHostEntry = Dns.GetHostEntry(strHostName);
             IPAddress[] address = ipHostEntry.AddressList;
-            return address[4];
+            for(int i=0;i<address.Length;i++)
+            {
+                var stringAddress = address[i].ToString();
+                if(!stringAddress.Contains(':'))
+                {
+                    return address[i];
+                }
+                
+            }
+            return address[0];
+
         }
     }
 }

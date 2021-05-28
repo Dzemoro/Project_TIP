@@ -25,6 +25,7 @@ namespace ClientApp
         SoundPlayer simpleSound = new SoundPlayer();
         SoundPlayer singalSound = new SoundPlayer();
         int listenport;
+        string callUser;
        //Task backgroundTask;
         public ClientForm()
         {
@@ -41,13 +42,9 @@ namespace ClientApp
             this.listenport = 0;
             try
             {
-                
                 this.tcpClient = tcpClient;
                 stream = tcpClient.GetStream();
-             
                 StartTCPListener();
-                
-         
             }
             catch (SocketException se)
             {
@@ -144,10 +141,7 @@ namespace ClientApp
             Console.WriteLine("Response:" + responseData);
             this.users.BeginInvoke(delUpdateBox, responseData);
         }
-       
-      
 
-        
         public void Listen()
         {
             
@@ -194,7 +188,7 @@ namespace ClientApp
                         data = System.Text.Encoding.ASCII.GetBytes(msg);
                         stream.Write(data, 0, data.Length);
 
-                        SessionForm sessionForm = new SessionForm(udpPort,nickname,udpAddress, listenport);
+                        SessionForm sessionForm = new SessionForm(udpPort,nickname,udpAddress, listenport,tcpClient,username);
                         GuiClient.RunPanel(sessionForm);
                        
 
@@ -209,25 +203,22 @@ namespace ClientApp
                 else if (words[0] == "CONN")
                 {
                     //CONN:DELLOR:127.0.0.1:2001- Connect - Serwer->Dellor
-                    listenport = FreePort();
+                   // listenport = FreePort();
                     var nickname = words[1];
                     var udpAddress = words[2];
                     var udpPort = Int32.Parse(words[3]);
-               
+                    //var msg = "CONN:" + words[2] + ":"+listenport.ToString();
                     singalSound.Stop();
                     simpleSound.Stop();
                     
-                    SessionForm sessionForm = new SessionForm(udpPort, nickname, udpAddress, listenport);
+                    SessionForm sessionForm = new SessionForm(udpPort, callUser, udpAddress, listenport, tcpClient,username);
                     GuiClient.RunPanel(sessionForm);
 
                 }
                 else if (words[0] == "DENY")
                 {
-                    MessageBox.Show("User Rejected Your Call");
-                  
+                    MessageBox.Show("User Rejected Your Call"); 
                 }
-
-
             }
         }
 
@@ -328,7 +319,7 @@ namespace ClientApp
         private void callButton_Click(object sender, EventArgs e)
         {
             const string message ="Are you sure that you would like to call that user?";
-
+            
             const string caption = "Calling";
             var result = MessageBox.Show(message, caption,
                                          MessageBoxButtons.YesNo,
@@ -342,7 +333,7 @@ namespace ClientApp
             else
             {
                 listenport = FreePort();
-
+                callUser = users.SelectedItem.ToString();
                 String msg = "CALL:"+users.SelectedItem.ToString() +":"+ username  +  ":"+listenport.ToString();
                 Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
                 stream.Write(data, 0, data.Length);
@@ -352,8 +343,6 @@ namespace ClientApp
               
             }
         }
-
-        
 
         protected void BeginDataTransmission(NetworkStream stream)
         {
@@ -389,6 +378,14 @@ namespace ClientApp
                 }
             }
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            var msg = "EXIT:" + username;// "CONN:" + words[2] + ":" + listenport.ToString();
+            var data = System.Text.Encoding.ASCII.GetBytes(msg);
+            stream.Write(data, 0, data.Length);
+            Application.Exit();
+        }
         #endregion
 
         #region Audio_Management
@@ -419,8 +416,7 @@ namespace ClientApp
            // client.sendBytes(IPAddress.Parse("127.0.0.1"), waveInEventArgs.Buffer);
         }
         #endregion
-       
-       
+   
         private void enableCall()
         {
             if(!callButton.Enabled)
@@ -434,12 +430,20 @@ namespace ClientApp
             strHostName = Dns.GetHostName();
             IPHostEntry ipHostEntry = Dns.GetHostEntry(strHostName);
             IPAddress[] address = ipHostEntry.AddressList;
-            return address[4];
+            for (int i = 0; i < address.Length; i++)
+            {
+                var stringAddress = address[i].ToString();
+                if (!stringAddress.Contains(":"))
+                {
+                    return address[i];
+                }
+
+            }
+            return address[0];
 
         }
         static int FreePort()
         {
-            
             var udp = new UdpClient(0, AddressFamily.InterNetwork);
             int port = ((IPEndPoint)udp.Client.LocalEndPoint).Port;
             udp.Dispose();
