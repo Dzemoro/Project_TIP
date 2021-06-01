@@ -61,7 +61,7 @@ namespace ServerClassLib
                         }
                         else
                         {
-                            User u = new User(data[3], data[1], UserStatus.Available);
+                            User u = new User(data[3], data[1], UserStatus.Available, stream);
                             Console.WriteLine(u.Name + " connected");
                             users.Add(u);
                             name = u.Name;
@@ -106,6 +106,8 @@ namespace ServerClassLib
                             }
                             msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
                             messages.Add(msg);
+                            msg = new Message(null, MessageType.LIST);
+                            messages.Add(msg);
                         }
                     }
                     else if (data[0] == "DENY")
@@ -145,13 +147,15 @@ namespace ServerClassLib
                         {
                             foreach(User user in users)
                             {
-                                if(user.Name == data[1])
+                                if(user.Name == data[1] || user.Name == data[2])
                                 {
                                     user.Status = UserStatus.Available;
-                                    msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
-                                    messages.Add(msg);
                                 }
                             }
+                            msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
+                            messages.Add(msg);
+                            msg = new Message(null, MessageType.LIST);
+                            messages.Add(msg);
                         }
                     }
                     else if (data[0] == "EXIT")
@@ -168,15 +172,28 @@ namespace ServerClassLib
                                 if(user.Name == data[1])
                                 {
                                     users.Remove(user);
+                                    msg = new Message(null, MessageType.LIST);
+                                    messages.Add(msg);
                                     break;
                                 }
                             }
                         }
                     }
                 }
-                if (listCounter != users.Count && listCounter != 0)
+                var listUpdates = messages.Where(x => x.MessageType == MessageType.LIST);
+                if (listUpdates.Count() != 0)
                 {
-                    SendList(stream);
+                    Message tmp = listUpdates.First();
+                    foreach(User user in users)
+                    {
+                        tmp.SendLIST(user.UserStream, users);
+                    }
+                    messages.Remove(tmp);
+                }
+                if (listCounter != users.Count && listCounter != 0 || listUpdates.Count() != 0)
+                {
+                    msg = new Message(null, MessageType.LIST);
+                    msg.SendLIST(stream, users);
                     listCounter = users.Count;
                 }
                 var calls = messages.Where(x => x.MessageType == MessageType.CALL && x.Informations[0] == name);
