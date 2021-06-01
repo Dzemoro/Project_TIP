@@ -63,7 +63,12 @@ namespace ClientApp
             var msg = "HANG:"+username+":"+nickName;// "CONN:" + words[2] + ":" + listenport.ToString();
             var data = System.Text.Encoding.ASCII.GetBytes(msg);
             stream.Write(data, 0, data.Length);
-            inputRec.StopRecording();
+            if (this.startSbutton.Text == "Mute")
+            {
+                inputRec.StopRecording();
+            }
+                
+
             player.Stop();
             player.Dispose();
             inputRec.Dispose();

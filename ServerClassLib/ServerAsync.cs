@@ -168,6 +168,7 @@ namespace ServerClassLib
                                 if(user.Name == data[1])
                                 {
                                     users.Remove(user);
+                                    break;
                                 }
                             }
                         }

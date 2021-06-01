@@ -11,7 +11,7 @@ namespace Server
     {
         static void Main(string[] args)
         {
-            ServerAsync server = new ServerAsync("192.168.0.125");
+            ServerAsync server = new ServerAsync("192.168.0.189");
             server.Start();
         }
     }
