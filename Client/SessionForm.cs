@@ -67,8 +67,6 @@ namespace ClientApp
             {
                 inputRec.StopRecording();
             }
-                
-
             player.Stop();
             player.Dispose();
             inputRec.Dispose();
