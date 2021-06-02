@@ -115,7 +115,7 @@ namespace ClientApp
             this.startSbutton.Name = "startSbutton";
             this.startSbutton.Size = new System.Drawing.Size(128, 29);
             this.startSbutton.TabIndex = 8;
-            this.startSbutton.Text = "Mute/Unmute";
+            this.startSbutton.Text = "Unmute";
             this.startSbutton.UseVisualStyleBackColor = true;
             this.startSbutton.Click += new System.EventHandler(this.startSbutton_Click);
             // 

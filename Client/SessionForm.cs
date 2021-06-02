@@ -32,6 +32,7 @@ namespace ClientApp
         public SessionForm(int port, string nickname, string udpaddress, int listenport, TcpClient tcpClient,string username)
         {
             InitializeComponent();
+            Refresh();
             this.sendport = port;
             this.nickName = nickname;
             this.udpAddress = udpaddress;
@@ -39,7 +40,11 @@ namespace ClientApp
             label1.Text = "Talking to: " + nickName;
             this.listenPort = listenport;
             this.username = username;
+            outputWaveProvider = new BufferedWaveProvider(new WaveFormat(44100, WaveIn.GetCapabilities(0).Channels));
+            player.Init(outputWaveProvider);
+            
             var task = Task.Run(ReceiveTransmition);
+            player.Play();
             StartTCPListener();
             Console.WriteLine("Receiving at port:" + listenport);
             try
@@ -105,6 +110,7 @@ namespace ClientApp
         {
             if(first)
             {
+                outputWaveProvider.ClearBuffer();
                 this.startSbutton.Text = "Mute";
                 if (audioSList.SelectedItems.Count == 0) return;
                 
@@ -114,9 +120,7 @@ namespace ClientApp
                     WaveFormat = new WaveFormat(44100, WaveIn.GetCapabilities(deviceNumber).Channels)
                 };
                 inputRec.DataAvailable += RecorderOnDataAvailable;
-                outputWaveProvider = new BufferedWaveProvider(inputRec.WaveFormat);
-                player.Init(outputWaveProvider);
-                player.Play();
+                
 
                 player = new WaveOut
                 {
@@ -147,7 +151,12 @@ namespace ClientApp
             Console.WriteLine("Sending data");
             
         }
+        
         private void refreshB_Click(object sender, EventArgs e)
+        {
+            Refresh();
+        }
+        private void Refresh()
         {
             List<WaveInCapabilities> audioSources = new List<WaveInCapabilities>();
             for (int i = 0; i < WaveIn.DeviceCount; i++)
@@ -162,7 +171,6 @@ namespace ClientApp
                 audioSList.Items.Add(device);
             }
         }
-
         
         private void ReceiveTransmition()
         {
@@ -175,12 +183,34 @@ namespace ClientApp
                 {
                     byte[] bytes = listener.Receive(ref groupEP);
                     Console.WriteLine("Received Something");
-                    outputWaveProvider.AddSamples(bytes, 0, bytes.Length);
+                    try
+                    {
+                        outputWaveProvider.AddSamples(bytes, 0, bytes.Length);
+                    }
+                    catch(System.InvalidOperationException e)
+                    {
+                        outputWaveProvider.ClearBuffer();
+                      if( player.PlaybackState==PlaybackState.Stopped)
+                      {
+                            player.Play();
+                      }
+                      if(player.PlaybackState == PlaybackState.Paused)
+                      {
+                            player.Resume();
+                      }
+
+                    }
+                   
+                    
                 }
             }
-            catch (SocketException e)
+            catch (System.InvalidOperationException e)
             {
                 Console.WriteLine(e);
+            }
+            catch(Exception e)
+            {
+                outputWaveProvider.ClearBuffer();
             }
             finally
             {
