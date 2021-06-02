@@ -13,12 +13,16 @@ namespace ServerClassLib
     {
         HashSet<Message> messages;
         HashSet<User> users;
+        readonly object messagesLock;
+        readonly object usersLock;
 
         public delegate void TransmissionDataDelegate(NetworkStream stream);
         public ServerAsync(string IPAddress = "127.0.0.1", int port = 8001) : base(System.Net.IPAddress.Parse(IPAddress), port)
         {
             users = new HashSet<User>();
             messages = new HashSet<Message>();
+            messagesLock = new object();
+            usersLock = new object();
         }
         protected override void AcceptClient()
         {
@@ -63,7 +67,10 @@ namespace ServerClassLib
                         {
                             User u = new User(data[3], data[1], UserStatus.Available, stream);
                             Console.WriteLine(u.Name + " connected");
-                            users.Add(u);
+                            lock(usersLock)
+                            {
+                                users.Add(u);
+                            }
                             name = u.Name;
                             listCounter = users.Count;
                             int portNumber = FreeTcpPort();
@@ -85,7 +92,10 @@ namespace ServerClassLib
                         else
                         {
                             msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
-                            messages.Add(msg);
+                            lock(messagesLock)
+                            {
+                                messages.Add(msg);
+                            }
                         }
                     }
                     else if (data[0] == "CONN")
@@ -97,17 +107,23 @@ namespace ServerClassLib
                         }
                         else
                         {
-                            foreach(User user in users)
+                            lock(usersLock)
                             {
-                                if(user.Name == data[1] || user.Name == name)
+                                foreach (User user in users)
                                 {
-                                    user.Status = UserStatus.Busy;
+                                    if (user.Name == data[1] || user.Name == name)
+                                    {
+                                        user.Status = UserStatus.Busy;
+                                    }
                                 }
                             }
-                            msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
-                            messages.Add(msg);
-                            msg = new Message(null, MessageType.LIST);
-                            messages.Add(msg);
+                            lock(messagesLock)
+                            {
+                                msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
+                                messages.Add(msg);
+                                msg = new Message(null, MessageType.LIST);
+                                messages.Add(msg);
+                            }
                         }
                     }
                     else if (data[0] == "DENY")
@@ -120,7 +136,10 @@ namespace ServerClassLib
                         else
                         {
                             msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
-                            messages.Add(msg);
+                            lock(messagesLock)
+                            {
+                                messages.Add(msg);
+                            }
                         }
                     }
                     else if(data[0] == "LIST")
@@ -145,17 +164,23 @@ namespace ServerClassLib
                         }
                         else
                         {
-                            foreach(User user in users)
+                            lock(usersLock)
                             {
-                                if(user.Name == data[1] || user.Name == data[2])
+                                foreach (User user in users)
                                 {
-                                    user.Status = UserStatus.Available;
+                                    if (user.Name == data[1] || user.Name == data[2])
+                                    {
+                                        user.Status = UserStatus.Available;
+                                    }
                                 }
                             }
-                            msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
-                            messages.Add(msg);
-                            msg = new Message(null, MessageType.LIST);
-                            messages.Add(msg);
+                            lock(messagesLock)
+                            {
+                                msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
+                                messages.Add(msg);
+                                msg = new Message(null, MessageType.LIST);
+                                messages.Add(msg);
+                            }
                         }
                     }
                     else if (data[0] == "EXIT")
@@ -167,71 +192,98 @@ namespace ServerClassLib
                         }
                         else
                         {
-                            foreach(User user in users)
+                            lock(usersLock)
                             {
-                                if(user.Name == data[1])
+                                foreach (User user in users)
                                 {
-                                    users.Remove(user);
-                                    msg = new Message(null, MessageType.LIST);
-                                    messages.Add(msg);
-                                    break;
+                                    if (user.Name == data[1])
+                                    {
+                                        users.Remove(user);
+                                        msg = new Message(null, MessageType.LIST);
+                                        lock(messagesLock)
+                                        {
+                                            messages.Add(msg);
+                                        }
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-                var listUpdates = messages.Where(x => x.MessageType == MessageType.LIST);
-                if (listUpdates.Count() != 0)
+
+                lock(messagesLock)
                 {
-                    Message tmp = listUpdates.First();
-                    foreach(User user in users)
+                    var listUpdates = messages.Where(x => x.MessageType == MessageType.LIST);
+                    if (listUpdates.Count() != 0)
                     {
-                        tmp.SendLIST(user.UserStream, users);
+                        Message tmp = listUpdates.First();
+                        foreach (User user in users)
+                        {
+                            tmp.SendLIST(user.UserStream, users);
+                        }
+                        messages.Remove(tmp);
                     }
-                    messages.Remove(tmp);
                 }
-                if (listCounter != users.Count && listCounter != 0 || listUpdates.Count() != 0)
+
+                if (listCounter != users.Count && listCounter != 0)
                 {
                     msg = new Message(null, MessageType.LIST);
                     msg.SendLIST(stream, users);
                     listCounter = users.Count;
                 }
-                var calls = messages.Where(x => x.MessageType == MessageType.CALL && x.Informations[0] == name);
-                if (calls.Count() != 0)
+
+                lock (messagesLock)
                 {
-                    //CALL:KEY:VALUE
-                    Message temp = calls.First();
-                    temp.SendCALL(stream, users);
-                    messages.Remove(temp);
-                }
-                var conns = messages.Where(x => x.MessageType == MessageType.CONN && x.Informations[0] == name);
-                if (conns.Count() != 0)
-                {
-                    //CONN:NAME:IP:PORT
-                    Message temp = conns.First();
-                    temp.SendCONN(stream, users);
-                    messages.Remove(temp);
-                }
-                var denys = messages.Where(x => x.MessageType == MessageType.DENY && x.Informations[0] == name);
-                if (denys.Count() != 0)
-                {
-                    //DENY:NAME_TO:NAME_FROM
-                    Message temp = denys.First();
-                    temp.SendDENY(stream);
-                    messages.Remove(temp);
-                }
-                var hangs = messages.Where(x => x.MessageType == MessageType.HANG && x.Informations[1] == name);
-                if (hangs.Count() != 0)
-                {
-                    //HANG:NAME_FROM:NAME_TO
-                    Message temp = hangs.First();
-                    temp.SendHANG(stream);
-                    messages.Remove(temp);
-                    foreach (User user in users)
+                    var calls = messages.Where(x => x.MessageType == MessageType.CALL && x.Informations[0] == name);
+                    if (calls.Count() != 0)
                     {
-                        if (user.Name == name)
+                        //CALL:KEY:VALUE
+                        Message temp = calls.First();
+                        temp.SendCALL(stream, users);
+                        messages.Remove(temp);
+                    }
+                }
+
+                lock(messagesLock)
+                {
+                    var conns = messages.Where(x => x.MessageType == MessageType.CONN && x.Informations[0] == name);
+                    if (conns.Count() != 0)
+                    {
+                        //CONN:NAME:IP:PORT
+                        Message temp = conns.First();
+                        temp.SendCONN(stream, users);
+                        messages.Remove(temp);
+                    }
+                }
+
+                lock(messagesLock)
+                {
+                    var denys = messages.Where(x => x.MessageType == MessageType.DENY && x.Informations[0] == name);
+                    if (denys.Count() != 0)
+                    {
+                        //DENY:NAME_TO:NAME_FROM
+                        Message temp = denys.First();
+                        temp.SendDENY(stream);
+                        messages.Remove(temp);
+                    }
+                }
+
+                lock(messagesLock)
+                {
+                    var hangs = messages.Where(x => x.MessageType == MessageType.HANG && x.Informations[1] == name);
+                    if (hangs.Count() != 0)
+                    {
+                        //HANG:NAME_FROM:NAME_TO
+                        Message temp = hangs.First();
+                        temp.SendHANG(stream);
+                        messages.Remove(temp);
+                        foreach (User user in users)
                         {
-                            user.Status = UserStatus.Available;
+                            if (user.Name == name)
+                            {
+                                user.Status = UserStatus.Available;
+                            }
                         }
                     }
                 }
