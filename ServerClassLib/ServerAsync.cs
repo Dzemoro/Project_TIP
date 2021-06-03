@@ -48,10 +48,11 @@ namespace ServerClassLib
             int listCounter = 0;
             Message msg;
             string name = "";
+            bool running = true;
 
             byte[] declineByte = new ASCIIEncoding().GetBytes(decline);
 
-            while (true)
+            while (running)
             {
                 var data = GetData(stream, buffer);
                 if (data != null)
@@ -79,7 +80,10 @@ namespace ServerClassLib
                             stream.Write(portResponseByte, 0, portResponseByte.Length);
                             portResponse = "PORT:";
                             msg = new Message(null, MessageType.LIST);
-                            msg.SendLIST(stream, users);
+                            lock(messagesLock)
+                            {
+                                messages.Add(msg);
+                            }
                         }
                     }
                     else if (data[0] == "CALL")
@@ -208,6 +212,8 @@ namespace ServerClassLib
                                     }
                                 }
                             }
+                            Console.WriteLine(name + " disconnected");
+                            running = false;
                         }
                     }
                 }
@@ -225,14 +231,6 @@ namespace ServerClassLib
                         messages.Remove(tmp);
                     }
                 }
-
-                if (listCounter != users.Count && listCounter != 0)
-                {
-                    msg = new Message(null, MessageType.LIST);
-                    msg.SendLIST(stream, users);
-                    listCounter = users.Count;
-                }
-
                 lock (messagesLock)
                 {
                     var calls = messages.Where(x => x.MessageType == MessageType.CALL && x.Informations[0] == name);
