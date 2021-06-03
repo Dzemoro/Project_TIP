@@ -45,7 +45,6 @@ namespace ServerClassLib
             string portResponse = "PORT:";
             string decline = "NACK";
 
-            int listCounter = 0;
             Message msg;
             string name = "";
             bool running = true;
@@ -73,7 +72,6 @@ namespace ServerClassLib
                                 users.Add(u);
                             }
                             name = u.Name;
-                            listCounter = users.Count;
                             int portNumber = FreeTcpPort();
                             portResponse += portNumber.ToString();
                             byte[] portResponseByte = new ASCIIEncoding().GetBytes(portResponse);
