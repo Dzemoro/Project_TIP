@@ -29,6 +29,7 @@ namespace ClientApp
         WaveOut player = new WaveOut();
         TcpClient tcpClient = new TcpClient();
         NetworkStream stream;
+        //VolumeWaveProvider16 volumeWaveProvider16= new VolumeWaveProvider16(outputWave);
         public SessionForm(int port, string nickname, string udpaddress, int listenport, TcpClient tcpClient,string username)
         {
             InitializeComponent();
@@ -42,7 +43,10 @@ namespace ClientApp
             this.username = username;
             outputWaveProvider = new BufferedWaveProvider(new WaveFormat(44100, WaveIn.GetCapabilities(0).Channels));
             player.Init(outputWaveProvider);
+            ///
+            /// 
             
+            ///
             var task = Task.Run(ReceiveTransmition);
             player.Play();
             StartTCPListener();
@@ -100,7 +104,8 @@ namespace ClientApp
                if(responseData.Contains("HANG"))
                {
                     this.Invoke((MethodInvoker)delegate
-                    { 
+                    {
+                        MessageBox.Show("Użytkownik zakończył rozmowę");
                         this.Close();
                     });
                 }
@@ -175,6 +180,7 @@ namespace ClientApp
         private void ReceiveTransmition()
         {
 
+
             IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, listenPort);
             UdpClient listener = new UdpClient(groupEP.Port);
             try
@@ -185,12 +191,20 @@ namespace ClientApp
                     Console.WriteLine("Received Something");
                     try
                     {
+                        if (IsBufferNearlyFull)
+                        {
+                            Console.WriteLine("Buffer getting full, taking a break");
+                            Thread.Sleep(500);
+                        }
                         outputWaveProvider.AddSamples(bytes, 0, bytes.Length);
+
                     }
                     catch(System.InvalidOperationException e)
                     {
                         outputWaveProvider.ClearBuffer();
-                      if( player.PlaybackState==PlaybackState.Stopped)
+                        player = new WaveOut();
+                        player.Init(outputWaveProvider);
+                      if ( player.PlaybackState==PlaybackState.Stopped)
                       {
                             player.Play();
                       }
@@ -208,10 +222,6 @@ namespace ClientApp
             {
                 Console.WriteLine(e);
             }
-            catch(Exception e)
-            {
-                outputWaveProvider.ClearBuffer();
-            }
             finally
             {
                 listener.Close();
@@ -220,6 +230,15 @@ namespace ClientApp
         private void StartTCPListener()
         {
             var task = Task.Run(() => Listen(), listenerCancellationToken.Token); 
+        }
+        private bool IsBufferNearlyFull
+        {
+            get
+            {
+                return outputWaveProvider != null &&
+                       outputWaveProvider.BufferLength - outputWaveProvider.BufferedBytes
+                       < outputWaveProvider.WaveFormat.AverageBytesPerSecond / 4;
+            }
         }
     }
    
