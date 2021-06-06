@@ -68,7 +68,7 @@
             this.connectBtn.Text = "Connect";
             this.connectBtn.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.connectBtn.UseVisualStyleBackColor = false;
-            this.connectBtn.Click += new System.EventHandler(this.connectBtn_Click);
+            this.connectBtn.Click += new System.EventHandler(this.ConnectBtn_Click);
             // 
             // userBox
             // 

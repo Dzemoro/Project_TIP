@@ -1,7 +1,7 @@
 ﻿
 namespace ClientApp
 {
-    partial class SessionForm
+    public partial class SessionForm
     {
         /// <summary>
         /// Required designer variable.
@@ -117,7 +117,7 @@ namespace ClientApp
             this.startSbutton.TabIndex = 8;
             this.startSbutton.Text = "Unmute";
             this.startSbutton.UseVisualStyleBackColor = true;
-            this.startSbutton.Click += new System.EventHandler(this.startSbutton_Click);
+            this.startSbutton.Click += new System.EventHandler(this.StartSbutton_Click);
             // 
             // refreshB
             // 
@@ -127,7 +127,7 @@ namespace ClientApp
             this.refreshB.TabIndex = 7;
             this.refreshB.Text = "Refresh sources";
             this.refreshB.UseVisualStyleBackColor = true;
-            this.refreshB.Click += new System.EventHandler(this.refreshB_Click);
+            this.refreshB.Click += new System.EventHandler(this.RefreshB_Click);
             // 
             // SessionForm
             // 

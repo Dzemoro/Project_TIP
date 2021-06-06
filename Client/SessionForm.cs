@@ -17,20 +17,20 @@ namespace ClientApp
 {
     public partial class SessionForm : Form
     {
-        int sendport,listenPort;
+        int sendport, listenPort;
         CancellationTokenSource listenerCancellationToken = new CancellationTokenSource();
-        string nickName,udpAddress;
+        string nickName, udpAddress;
         bool recording = false;
         Client client = new Client();
         bool first = true;
         string username;
         WaveIn inputRec;
-        BufferedWaveProvider outputWaveProvider= new BufferedWaveProvider(new WaveFormat(44100, WaveIn.GetCapabilities(0).Channels));
+        BufferedWaveProvider outputWaveProvider = new BufferedWaveProvider(new WaveFormat(44100, WaveIn.GetCapabilities(0).Channels));
         WaveOut player = new WaveOut();
         TcpClient tcpClient = new TcpClient();
         NetworkStream stream;
         //VolumeWaveProvider16 volumeWaveProvider16= new VolumeWaveProvider16(outputWave);
-        public SessionForm(int port, string nickname, string udpaddress, int listenport, TcpClient tcpClient,string username)
+        public SessionForm(int port, string nickname, string udpaddress, int listenport, TcpClient tcpClient, string username)
         {
             InitializeComponent();
             Refresh();
@@ -45,7 +45,7 @@ namespace ClientApp
             player.Init(outputWaveProvider);
             ///
             /// 
-            
+
             ///
             var task = Task.Run(ReceiveTransmition);
             player.Play();
@@ -62,14 +62,14 @@ namespace ClientApp
                 MessageBox.Show("Connection Lost");
                 ConnectionPanel connectionPanel = new ConnectionPanel();
                 connectionPanel.Show();
-               // 
+                // 
                 this.Close();
             }
 
         }
         private void discButton_Click(object sender, EventArgs e)
         {
-            var msg = "HANG:"+username+":"+nickName;// "CONN:" + words[2] + ":" + listenport.ToString();
+            var msg = "HANG:" + username + ":" + nickName;// "CONN:" + words[2] + ":" + listenport.ToString();
             var data = System.Text.Encoding.ASCII.GetBytes(msg);
             stream.Write(data, 0, data.Length);
             if (this.startSbutton.Text == "Mute")
@@ -82,7 +82,7 @@ namespace ClientApp
             outputWaveProvider.ClearBuffer();
             this.Close();
         }
-        
+
         public SessionForm()
         {
             InitializeComponent();
@@ -100,8 +100,8 @@ namespace ClientApp
                 responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
                 Console.WriteLine(responseData);
 
-               if(responseData.Contains("HANG"))
-               {
+                if (responseData.Contains("HANG"))
+                {
                     this.Invoke((MethodInvoker)delegate
                     {
                         MessageBox.Show("Użytkownik zakończył rozmowę");
@@ -110,21 +110,21 @@ namespace ClientApp
                 }
             }
         }
-        private void startSbutton_Click(object sender, EventArgs e)
+        private void StartSbutton_Click(object sender, EventArgs e)
         {
-            if(first)
+            if (first)
             {
                 outputWaveProvider.ClearBuffer();
                 this.startSbutton.Text = "Mute";
                 if (audioSList.SelectedItems.Count == 0) return;
-                
+
                 int deviceNumber = audioSList.SelectedItems[0].Index;
                 inputRec = new WaveIn
                 {
                     WaveFormat = new WaveFormat(44100, WaveIn.GetCapabilities(deviceNumber).Channels)
                 };
                 inputRec.DataAvailable += RecorderOnDataAvailable;
-                
+
 
                 player = new WaveOut
                 {
@@ -132,7 +132,7 @@ namespace ClientApp
                 };
                 first = false;
             }
-           
+
 
             if (recording == false)
             {
@@ -151,12 +151,12 @@ namespace ClientApp
         }
         private void RecorderOnDataAvailable(object sender, WaveInEventArgs waveInEventArgs)
         {
-            client.sendBytes(IPAddress.Parse(udpAddress), waveInEventArgs.Buffer,sendport);
+            client.sendBytes(IPAddress.Parse(udpAddress), waveInEventArgs.Buffer, sendport);
             Console.WriteLine("Sending data");
-            
+
         }
-        
-        private void refreshB_Click(object sender, EventArgs e)
+
+        private void RefreshB_Click(object sender, EventArgs e)
         {
             Refresh();
         }
@@ -175,7 +175,7 @@ namespace ClientApp
                 audioSList.Items.Add(device);
             }
         }
-        
+
         private void ReceiveTransmition()
         {
 
@@ -198,19 +198,19 @@ namespace ClientApp
                         outputWaveProvider.AddSamples(bytes, 0, bytes.Length);
 
                     }
-                    catch(System.InvalidOperationException e)
+                    catch (System.InvalidOperationException e)
                     {
                         outputWaveProvider.ClearBuffer();
                         player = new WaveOut();
                         player.Init(outputWaveProvider);
-                      if ( player.PlaybackState==PlaybackState.Stopped)
-                      {
+                        if (player.PlaybackState == PlaybackState.Stopped)
+                        {
                             player.Play();
-                      }
-                      if(player.PlaybackState == PlaybackState.Paused)
-                      {
+                        }
+                        if (player.PlaybackState == PlaybackState.Paused)
+                        {
                             player.Resume();
-                      }
+                        }
 
                     }
 
@@ -227,7 +227,7 @@ namespace ClientApp
         }
         private void StartTCPListener()
         {
-            var task = Task.Run(() => Listen(), listenerCancellationToken.Token); 
+            var task = Task.Run(() => Listen(), listenerCancellationToken.Token);
         }
         private bool IsBufferNearlyFull
         {
@@ -239,6 +239,6 @@ namespace ClientApp
             }
         }
     }
-   
+
 
 }

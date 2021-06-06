@@ -23,7 +23,7 @@ namespace ClientApp
         TcpClient tcpClient;
         Client client = new Client();
         ClientForm clientForm;
-        private void connectBtn_Click(object sender, EventArgs e)
+        private void ConnectBtn_Click(object sender, EventArgs e)
         {
             
             if (addressBox.Text.Length != 0 && addressBox.Text.Length <= 15)
@@ -39,12 +39,12 @@ namespace ClientApp
                         addressBox.ForeColor = Color.Green;
                         string temp = addressBox.Text;
                         Console.WriteLine(temp);
-                        string msg = "HELL:" + getIPAddress() + ":8001:" + userBox.Text;
+                        string msg = "HELL:" + GetIPAddress() + ":8001:" + userBox.Text;
                     // IPAddress ipAddress = IPAddress.Parse(temp);
                     try
                     {
                         tcpClient = new TcpClient(temp, 8001);
-                        msg = "HELL:" + getIPAddress() + ":8001:" + userBox.Text;
+                        msg = "HELL:" + GetIPAddress() + ":8001:" + userBox.Text;
                         Console.WriteLine(msg);
       
                         Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
@@ -132,16 +132,16 @@ namespace ClientApp
             }
         }
 
-        private void exitButton_Click(object sender, EventArgs e)
+        private void ExitButton_Click(object sender, EventArgs e)
         {
             Application.Exit();
         }
 
-        private void miniButton_Click(object sender, EventArgs e)
+        private void MiniButton_Click(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Minimized;
         }
-        private IPAddress getIPAddress()
+        private IPAddress GetIPAddress()
         {
             String strHostName = string.Empty;
             strHostName = Dns.GetHostName();
