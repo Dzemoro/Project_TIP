@@ -83,7 +83,6 @@ namespace ClientApp
             this.Close();
         }
         
-
         public SessionForm()
         {
             InitializeComponent();
