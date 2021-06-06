@@ -123,8 +123,6 @@ namespace ServerClassLib
                             {
                                 msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
                                 messages.Add(msg);
-                                msg = new Message(null, MessageType.LIST);
-                                messages.Add(msg);
                             }
                         }
                     }
@@ -180,8 +178,6 @@ namespace ServerClassLib
                             {
                                 msg = new Message(data.Skip(1).ToArray(), EnumCaster.MessageTypeFromString(data[0]));
                                 messages.Add(msg);
-                                msg = new Message(null, MessageType.LIST);
-                                messages.Add(msg);
                             }
                         }
                     }
@@ -201,11 +197,6 @@ namespace ServerClassLib
                                     if (user.Name == data[1])
                                     {
                                         users.Remove(user);
-                                        msg = new Message(null, MessageType.LIST);
-                                        lock(messagesLock)
-                                        {
-                                            messages.Add(msg);
-                                        }
                                         break;
                                     }
                                 }
@@ -216,7 +207,26 @@ namespace ServerClassLib
                     }
                 }
 
-                lock(messagesLock)
+                lock (messagesLock)
+                {
+                    var hangs = messages.Where(x => x.MessageType == MessageType.HANG && x.Informations[1] == name);
+                    if (hangs.Count() != 0)
+                    {
+                        //HANG:NAME_FROM:NAME_TO
+                        Message temp = hangs.First();
+                        temp.SendHANG(stream);
+                        messages.Remove(temp);
+                        foreach (User user in users)
+                        {
+                            if (user.Name == name)
+                            {
+                                user.Status = UserStatus.Available;
+                            }
+                        }
+                    }
+                }
+
+                lock (messagesLock)
                 {
                     var listUpdates = messages.Where(x => x.MessageType == MessageType.LIST);
                     if (listUpdates.Count() != 0)
@@ -262,25 +272,6 @@ namespace ServerClassLib
                         Message temp = denys.First();
                         temp.SendDENY(stream);
                         messages.Remove(temp);
-                    }
-                }
-
-                lock(messagesLock)
-                {
-                    var hangs = messages.Where(x => x.MessageType == MessageType.HANG && x.Informations[1] == name);
-                    if (hangs.Count() != 0)
-                    {
-                        //HANG:NAME_FROM:NAME_TO
-                        Message temp = hangs.First();
-                        temp.SendHANG(stream);
-                        messages.Remove(temp);
-                        foreach (User user in users)
-                        {
-                            if (user.Name == name)
-                            {
-                                user.Status = UserStatus.Available;
-                            }
-                        }
                     }
                 }
             }

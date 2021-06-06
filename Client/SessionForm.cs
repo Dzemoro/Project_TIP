@@ -29,11 +29,13 @@ namespace ClientApp
         WaveOut player = new WaveOut();
         TcpClient tcpClient = new TcpClient();
         NetworkStream stream;
+        bool hanged = false;
         //VolumeWaveProvider16 volumeWaveProvider16= new VolumeWaveProvider16(outputWave);
         public SessionForm(int port, string nickname, string udpaddress, int listenport, TcpClient tcpClient, string username)
         {
             InitializeComponent();
             Refresh();
+            hanged = false;
             this.sendport = port;
             this.nickName = nickname;
             this.udpAddress = udpaddress;
@@ -83,6 +85,7 @@ namespace ClientApp
                 inputRec.Dispose();
             }
             outputWaveProvider.ClearBuffer();
+            hanged = true;
             this.Close();
         }
 
@@ -103,13 +106,20 @@ namespace ClientApp
                 responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
                 Console.WriteLine(responseData);
 
-                if (responseData.Contains("HANG"))
+                if (responseData.Contains("HANG") && !hanged)
                 {
-                    this.Invoke((MethodInvoker)delegate
+                    try
                     {
-                        MessageBox.Show("Użytkownik zakończył rozmowę");
-                        this.Close();
-                    });
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            MessageBox.Show("User has left.");
+                            this.Close();
+                        });
+                    }
+                    catch(Exception exc)
+                    {
+                        MessageBox.Show("User has left, hang out.");
+                    }
                 }
             }
         }
