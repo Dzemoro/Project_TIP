@@ -213,8 +213,7 @@ namespace ClientApp
                       }
 
                     }
-                   
-                    
+
                 }
             }
             catch (System.InvalidOperationException e)

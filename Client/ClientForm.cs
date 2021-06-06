@@ -394,8 +394,8 @@ namespace ClientApp
         /// </summary>
         private void PlayCall()
         {
-                    singalSound = new SoundPlayer(@"C:\Users\Krzysiek\Desktop\Sounds\internal.wav");
-                    singalSound.Play();
+                 //   singalSound = new SoundPlayer(@"C:\Users\Krzysiek\Desktop\Sounds\internal.wav");
+                  //  singalSound.Play();
         }
         /// <summary>
         /// Method to play ring sound
@@ -403,8 +403,8 @@ namespace ClientApp
         private void PlayRing()
         {
   
-            simpleSound = new SoundPlayer(@"C:\Users\Krzysiek\Desktop\Sounds\call_ring.wav");
-            simpleSound.Play();
+           // simpleSound = new SoundPlayer(@"C:\Users\Krzysiek\Desktop\Sounds\call_ring.wav");
+           // simpleSound.Play();
         }
         private void WOut_PlaybackStopped(object sender, NAudio.Wave.StoppedEventArgs e)
         {
