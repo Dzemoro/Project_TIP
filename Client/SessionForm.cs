@@ -78,7 +78,10 @@ namespace ClientApp
             }
             player.Stop();
             player.Dispose();
-            inputRec.Dispose();
+            if( inputRec!=null)
+            {
+                inputRec.Dispose();
+            }
             outputWaveProvider.ClearBuffer();
             this.Close();
         }
