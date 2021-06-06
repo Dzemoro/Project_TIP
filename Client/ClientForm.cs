@@ -81,6 +81,13 @@ namespace ClientApp
             }
 
         }
+        
+        private void Refresh()
+        {
+            var msg = "LIST:" + username;// "CONN:" + words[2] + ":" + listenport.ToString();
+            var data = System.Text.Encoding.ASCII.GetBytes(msg);
+            stream.Write(data, 0, data.Length);
+        }
         public void Listen()
         {
             
@@ -293,6 +300,11 @@ namespace ClientApp
             int port = ((IPEndPoint)udp.Client.LocalEndPoint).Port;
             udp.Dispose();
             return port;
+        }
+
+        private void RefreshButton_Click(object sender, EventArgs e)
+        {
+            Refresh();
         }
     }
 }

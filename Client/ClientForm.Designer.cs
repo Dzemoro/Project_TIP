@@ -31,6 +31,7 @@
             this.users = new System.Windows.Forms.ListBox();
             this.callButton = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
+            this.RefreshButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // users
@@ -64,12 +65,23 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.Button1_Click);
             // 
+            // RefreshButton
+            // 
+            this.RefreshButton.Location = new System.Drawing.Point(311, 45);
+            this.RefreshButton.Name = "RefreshButton";
+            this.RefreshButton.Size = new System.Drawing.Size(141, 27);
+            this.RefreshButton.TabIndex = 13;
+            this.RefreshButton.Text = "Refresh";
+            this.RefreshButton.UseVisualStyleBackColor = true;
+            this.RefreshButton.Click += new System.EventHandler(this.RefreshButton_Click);
+            // 
             // ClientForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.LightSlateGray;
             this.ClientSize = new System.Drawing.Size(477, 226);
+            this.Controls.Add(this.RefreshButton);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.callButton);
             this.Controls.Add(this.users);
@@ -84,6 +96,7 @@
         private System.Windows.Forms.ListBox users;
         private System.Windows.Forms.Button callButton;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button RefreshButton;
     }
 }
 
