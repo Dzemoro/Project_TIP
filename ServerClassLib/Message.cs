@@ -28,11 +28,6 @@ namespace ServerClassLib
             this.MessageType = messageType;
         }
 
-        public void SendHELL(NetworkStream stream)
-        {
-            //TODO: write body
-        }
-
         public void SendCALL(NetworkStream stream, HashSet<User> users)
         {
             string call = EnumCaster.MessageTypeToString(MessageType) + ":" + Informations[0] + ":" + Informations[1] + ":" + GetUserIPAddress(Informations[1], users) + ":" + Informations[2];

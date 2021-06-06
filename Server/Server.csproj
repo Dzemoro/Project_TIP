@@ -79,6 +79,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="ServerDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ServerClassLib\ServerClassLib.csproj">

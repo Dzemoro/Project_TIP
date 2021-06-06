@@ -336,17 +336,6 @@ namespace ServerClassLib
                 return temp;
             }
         }
-        //Temporary Function
-        private void SendList(NetworkStream stream)
-        {
-            string listResponse = "LIST";
-            foreach (User u in users)
-            {
-                listResponse += ":" + u.Name;
-            }
-            byte[] listResponseByte = new ASCIIEncoding().GetBytes(listResponse);
-            stream.Write(listResponseByte, 0, listResponseByte.Length);
-        }
         public string GetUserIPAddress(string name)
         {
             foreach(User u in users)
