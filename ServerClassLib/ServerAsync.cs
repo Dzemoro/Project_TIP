@@ -45,13 +45,13 @@ namespace ServerClassLib
             string portResponse = "PORT:";
             string decline = "NACK";
 
-            int listCounter = 0;
             Message msg;
             string name = "";
+            bool running = true;
 
             byte[] declineByte = new ASCIIEncoding().GetBytes(decline);
 
-            while (true)
+            while (running)
             {
                 var data = GetData(stream, buffer);
                 if (data != null)
@@ -72,14 +72,16 @@ namespace ServerClassLib
                                 users.Add(u);
                             }
                             name = u.Name;
-                            listCounter = users.Count;
                             int portNumber = FreeTcpPort();
                             portResponse += portNumber.ToString();
                             byte[] portResponseByte = new ASCIIEncoding().GetBytes(portResponse);
                             stream.Write(portResponseByte, 0, portResponseByte.Length);
                             portResponse = "PORT:";
                             msg = new Message(null, MessageType.LIST);
-                            msg.SendLIST(stream, users);
+                            lock(messagesLock)
+                            {
+                                messages.Add(msg);
+                            }
                         }
                     }
                     else if (data[0] == "CALL")
@@ -208,6 +210,8 @@ namespace ServerClassLib
                                     }
                                 }
                             }
+                            Console.WriteLine(name + " disconnected");
+                            running = false;
                         }
                     }
                 }
@@ -225,14 +229,6 @@ namespace ServerClassLib
                         messages.Remove(tmp);
                     }
                 }
-
-                if (listCounter != users.Count && listCounter != 0)
-                {
-                    msg = new Message(null, MessageType.LIST);
-                    msg.SendLIST(stream, users);
-                    listCounter = users.Count;
-                }
-
                 lock (messagesLock)
                 {
                     var calls = messages.Where(x => x.MessageType == MessageType.CALL && x.Informations[0] == name);
@@ -339,17 +335,6 @@ namespace ServerClassLib
                 temp[temp.Length - 1] = temp[temp.Length - 1].Replace("\n", "").Replace("\r", "");
                 return temp;
             }
-        }
-        //Temporary Function
-        private void SendList(NetworkStream stream)
-        {
-            string listResponse = "LIST";
-            foreach (User u in users)
-            {
-                listResponse += ":" + u.Name;
-            }
-            byte[] listResponseByte = new ASCIIEncoding().GetBytes(listResponse);
-            stream.Write(listResponseByte, 0, listResponseByte.Length);
         }
         public string GetUserIPAddress(string name)
         {
