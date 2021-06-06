@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
+  <Class Name="ClientApp.ClientForm">
+    <Position X="4.5" Y="1.25" Width="3.5" />
+    <Members>
+      <Field Name="button1" Hidden="true" />
+      <Field Name="callButton" Hidden="true" />
+      <Field Name="components" Hidden="true" />
+      <Method Name="Dispose" Hidden="true" />
+      <Method Name="InitializeComponent" Hidden="true" />
+      <Field Name="users" Hidden="true" />
+    </Members>
+    <NestedTypes>
+      <Delegate Name="ClientApp.ClientForm.TransmissionDataDelegate" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>ClientForm.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="ClientApp.ClientForm.delUpdateBox" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>ClientForm.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="ClientApp.ClientForm.delUpdateUsers" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>ClientForm.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>IAgAAAQAECAEAEYAAkCAAAEDoAAIRAAACCQADABAIAg=</HashCode>
+      <FileName>ClientForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ClientApp.ConnectionPanel">
+    <Position X="2.25" Y="3" Width="2" />
+    <Members>
+      <Field Name="addressBox" Hidden="true" />
+      <Field Name="components" Hidden="true" />
+      <Field Name="connectBtn" Hidden="true" />
+      <Method Name="Dispose" Hidden="true" />
+      <Method Name="InitializeComponent" Hidden="true" />
+      <Field Name="ip_addr_lbl" Hidden="true" />
+      <Field Name="userBox" Hidden="true" />
+      <Field Name="userLabel" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAQAAgAIACAAAACKAAAAAAABAAABAAAAQs=</HashCode>
+      <FileName>ConnectionPanel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ClientApp.GuiClient">
+    <Position X="2.25" Y="1.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>GuIClient.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ClientApp.SessionForm">
+    <Position X="8.25" Y="1.25" Width="3.5" />
+    <Members>
+      <Field Name="audioPanel" Hidden="true" />
+      <Field Name="audioSList" Hidden="true" />
+      <Field Name="columnHeader1" Hidden="true" />
+      <Field Name="columnHeader2" Hidden="true" />
+      <Field Name="components" Hidden="true" />
+      <Field Name="discButton" Hidden="true" />
+      <Method Name="Dispose" Hidden="true" />
+      <Method Name="InitializeComponent" Hidden="true" />
+      <Field Name="label1" Hidden="true" />
+      <Field Name="micGroup" Hidden="true" />
+      <Field Name="refreshB" Hidden="true" />
+      <Field Name="startSbutton" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AAAAIAEAACBAAFAAYgGIAUFCM4AAKAABCAABBAAAAAg=</HashCode>
+      <FileName>SessionForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

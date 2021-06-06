@@ -1,0 +1,41 @@
+﻿1. Wysłanie połączenia z klienta do serwera //
+2. Serwer odsyła potwierdzenie połączenia 
+3. Serwer wysyła listę użytkowników będącą zawartością kontenera
+4. Klient wybiera użytkownika do którego chce zadzwonić
+	Wysyła komunikat np CLL i (adres ip/nazwa użytkownika).	oraz port na którym będzie nasłuchiwał UDP
+	Serwer odnajduje po nazwie odpowiedni adres
+	Wysyła komunikat CLL do użytkownika o podanej nazwie
+	2 Klient odpowiada np 
+		DENY -  odmowa połaczenia
+		CALL -  akceptowanie połączenia+ port na którym będzie nasłuchiwał UDP
+	Serwer forwarduje wiadomości jednak zapamiętuje porty
+	Żeby się nie pomieszało to można zrobić jakiś kontener z trwającymi sesjami
+		
+5. GADU GADU GADU po UDP
+6. 1 użytkownik naciska rozłącz i wysyła komunikat TCP np END
+	Serwer odbiera komunikat i wysyłą TCP END do drugiego użytkownika
+	Zamyka sesję
+
+
+OPCJONALNIE (Dodatkowo np ping- żeby sprawdzać czy jesteś w sieci, no i można sobie PING wyświetlać) po TCP bo tylko UDP byłby używany 
+
+KOMUNIKATY:
+DENY- Deny odrzuć połączenie
+HELL- HELLO próba połączenia z serwerem TCP
+
+CALL:Korzych:Dellor:8001 - Delor->Serwer
+CALL:Korzych:Dellor:127.0.0.1:8001 - Serwer->Korzych	
+CONN:DELLOR:2001- Connect - Krzychol->Serwer
+CONN:DELLOR:127.0.0.1:2001- Connect - Serwer->Dellor
+
+
+
+DENY:Dellor - Ktoś odrzuca Dellor
+
+DENY:Dellor - Ktoś odrzuca Dellor
+
+HELL:127.0.0.1:11110:USERNAME
+PORT:8001
+OKAY:8001
+
+LIST:KORZYCH:DELLOR:PAWELEK:WOJTUSIOR
